@@ -1,0 +1,103 @@
+# ============================================================
+# Финни — .gitignore
+# Flutter project, cross-platform (Windows / macOS dev)
+# ============================================================
+
+# ── OS-generated ─────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.swp
+*.swo
+*~
+
+# ── IDE / Editor ─────────────────────────────────────────────
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+*.code-workspace
+.atom/
+.history
+
+# ── Flutter / Dart / Pub ─────────────────────────────────────
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+/coverage/
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.widget_preview/
+.metadata
+
+# ── Android ──────────────────────────────────────────────────
+# Build outputs
+/android/app/debug/
+/android/app/profile/
+/android/app/release/
+/android/.gradle/
+/android/app/build/
+/android/build/
+/android/captures/
+
+# Local properties (machine-specific SDK paths)
+/android/local.properties
+
+# ── SIGNING SECRETS (NEVER COMMIT!) ──────────────────────────
+/android/release-signing.properties
+/android/app/*.jks
+/android/app/*.keystore
+*.jks
+*.keystore
+/android/key.properties
+
+# ── iOS / macOS (for future) ─────────────────────────────────
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/Flutter.podspec
+**/macos/Pods/
+**/macos/Flutter/GeneratedPluginRegistrant.swift
+
+# ── Windows ──────────────────────────────────────────────────
+/windows/flutter/generated_plugin_registrant.cc
+/windows/flutter/generated_plugin_registrant.h
+/windows/flutter/generated_plugins.cmake
+
+# ── Local toolchains (machine-specific) ──────────────────────
+.local-gradle/
+.local-android-sdk/
+.local-home/
+
+# ── Build artifacts / APK / AAB ──────────────────────────────
+*.apk
+*.aab
+*.ipa
+
+# ── Diagnostics / Logs ───────────────────────────────────────
+.helm-diag/
+*.log
+*.class
+*.pyc
+
+# ── Symbolication & Obfuscation ──────────────────────────────
+app.*.symbols
+app.*.map.json
+
+# ── Misc ─────────────────────────────────────────────────────
+migrate_working_dir/
+.svn/
+.build/
+.buildlog/
+.swiftpm/
