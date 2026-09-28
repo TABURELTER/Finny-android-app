@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../data/models/game_state.dart';
 import '../../../shared/widgets/pet_avatar_widget.dart';
+import '../../../shared/widgets/room_scene_svg.dart';
 import '../../../game/content/goals.dart';
 import '../../../game/content/financial_tasks.dart';
 
@@ -171,12 +172,10 @@ class HomeDashboard extends StatelessWidget {
                           alignment: Alignment.center,
                           children: [
                             Positioned.fill(
-                              child: CustomPaint(
-                                painter: FinnyRoomPainter(
-                                  rain: rain,
-                                  bed: state.inventory.hasItem('cozy_bed'),
-                                  lamp: state.inventory.hasItem('warm_lamp'),
-                                ),
+                              child: RoomSceneSvg(
+                                forecast: state.forecast,
+                                bed: state.inventory.hasItem('cozy_bed'),
+                                lamp: state.inventory.hasItem('warm_lamp'),
                               ),
                             ),
                             Positioned(
@@ -193,15 +192,8 @@ class HomeDashboard extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(18),
                                 ),
                                 child: Text(
-                                  state.finny.moodReason
-                                      .replaceAll(
-                                        RegExp(r'[^\u0000-\uFFFF]'),
-                                        '',
-                                      )
-                                      .trim(),
+                                  state.finny.moodReason,
                                   textAlign: TextAlign.center,
-                                  maxLines: 2,
-                                  overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(
                                     fontSize: 13,
                                     fontWeight: FontWeight.w700,
@@ -632,78 +624,4 @@ class _Action extends StatelessWidget {
       ),
     ),
   );
-}
-
-class FinnyRoomPainter extends CustomPainter {
-  final bool rain, bed, lamp;
-  const FinnyRoomPainter({
-    required this.rain,
-    required this.bed,
-    required this.lamp,
-  });
-  @override
-  void paint(Canvas canvas, Size size) {
-    canvas.save();
-    canvas.scale(size.width / 360, size.height / 360);
-    final p = Paint();
-    void rect(double x, double y, double w, double h, int c, [double r = 0]) {
-      p.color = Color(c);
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(Rect.fromLTWH(x, y, w, h), Radius.circular(r)),
-        p,
-      );
-    }
-
-    void oval(double x, double y, double w, double h, int c) {
-      p.color = Color(c);
-      canvas.drawOval(Rect.fromLTWH(x, y, w, h), p);
-    }
-
-    rect(0, 0, 360, 360, 0xFFE6C7A8);
-    rect(0, 0, 360, 260, 0xFFFFEBCF);
-    // A broad architectural arch frames the character without outlining a card.
-    rect(79, 57, 208, 232, 0xFFE6BADC, 104);
-    rect(89, 65, 188, 218, 0xFFFFE8CD, 94);
-    rect(19, 91, 75, 111, 0xFF9FCBC6, 36);
-    rect(24, 96, 65, 100, rain ? 0xFF9BC1D8 : 0xFF91DEE1, 32);
-    oval(57, 109, 21, 21, 0xFFFFD16F);
-    oval(25, 167, 63, 29, 0xFF65B69E);
-    rect(53, 96, 5, 101, 0xFFFFF7E6);
-    rect(24, 149, 65, 5, 0xFFFFF7E6);
-    rect(15, 199, 84, 8, 0xFF9B806C, 4);
-    rect(0, 257, 360, 6, 0xFFCC9E82);
-    p.color = const Color(0xFFCCA584);
-    p.strokeWidth = 1.5;
-    for (final y in [293.0, 332.0]) {
-      canvas.drawLine(Offset(0, y), Offset(360, y), p);
-    }
-    oval(66, 293, 230, 51, 0xFF77BFAE);
-    oval(77, 298, 208, 37, 0xFFBDEBDA);
-    // Small framed botanical print and a sculpted plant.
-    rect(291, 103, 45, 60, 0xFFC8918C, 8);
-    rect(296, 108, 35, 50, 0xFFFFF5E2, 4);
-    rect(312, 122, 3, 28, 0xFF378965, 2);
-    oval(302, 121, 14, 9, 0xFF56A66B);
-    oval(313, 133, 12, 8, 0xFF79BC79);
-    rect(307, 224, 5, 51, 0xFF367E56, 2);
-    oval(285, 223, 25, 13, 0xFF44A26E);
-    oval(310, 211, 26, 15, 0xFF72BC7A);
-    oval(301, 203, 13, 25, 0xFF3E9469);
-    rect(292, 258, 35, 30, 0xFFE38664, 8);
-    rect(289, 254, 41, 9, 0xFFF3A37B, 4);
-    if (bed) {
-      oval(7, 288, 83, 35, 0xFFAFA1C3);
-      oval(14, 289, 69, 22, 0xFFD8CAE5);
-    }
-    if (lamp) {
-      rect(270, 218, 4, 68, 0xFF9D866D);
-      oval(255, 283, 35, 7, 0xFF9D866D);
-      rect(252, 194, 41, 29, 0xFFFFDB90, 12);
-    }
-    canvas.restore();
-  }
-
-  @override
-  bool shouldRepaint(FinnyRoomPainter old) =>
-      old.rain != rain || old.bed != bed || old.lamp != lamp;
 }

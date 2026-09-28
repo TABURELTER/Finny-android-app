@@ -5,7 +5,7 @@ final List<GoalDefinition> kAvailableGoals = [
     id: 'rocket',
     name: 'Космическая ракета',
     icon: '🚀',
-    targetCost: 100,
+    targetCost: 125,
     description: 'Настоящая межзвёздная ракета для полёта к звёздам!',
     stages: [
       GoalVisualStage(
@@ -23,7 +23,8 @@ final List<GoalDefinition> kAvailableGoals = [
       GoalVisualStage(
         stageIndex: 2,
         title: 'Корпус и иллюминаторы',
-        description: 'Белоснежный корпус собран! В круглые иллюминаторы виден космос.',
+        description:
+            'Белоснежный корпус собран! В круглые иллюминаторы виден космос.',
         icon: '🛰️',
       ),
       GoalVisualStage(
@@ -35,7 +36,8 @@ final List<GoalDefinition> kAvailableGoals = [
       GoalVisualStage(
         stageIndex: 4,
         title: 'Готовая ракета!',
-        description: 'Ракета сияет на стартовой площадке! Финни готов к полёту!',
+        description:
+            'Ракета сияет на стартовой площадке! Финни готов к полёту!',
         icon: '🚀',
       ),
     ],
@@ -44,7 +46,7 @@ final List<GoalDefinition> kAvailableGoals = [
     id: 'treehouse',
     name: 'Домик на дереве',
     icon: '🏠',
-    targetCost: 80,
+    targetCost: 100,
     description: 'Тайное убежище на ветвях векового дуба с видом на лес.',
     stages: [
       GoalVisualStage(
@@ -83,7 +85,7 @@ final List<GoalDefinition> kAvailableGoals = [
     id: 'skate',
     name: 'Турбо-скейт',
     icon: '🛹',
-    targetCost: 60,
+    targetCost: 80,
     description: 'Скоростной скейтборд с неоновыми светящимися колёсами.',
     stages: [
       GoalVisualStage(

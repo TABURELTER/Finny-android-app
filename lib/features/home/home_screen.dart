@@ -1,13 +1,15 @@
+import 'dart:async';
+
 import 'widgets/compact_home_dashboard.dart';
+import 'widgets/balance_decision_card.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/finny_tokens.dart';
-import '../../data/models/event_models.dart';
+import '../../core/theme/app_accent.dart';
 import '../../data/models/game_state.dart';
 import '../../game/content/days.dart';
-import '../../game/content/financial_tasks.dart';
 import '../../game/engine/game_engine.dart';
 import '../adult/adult_screen.dart';
 import '../demo/demo_drawer.dart';
@@ -18,6 +20,8 @@ import '../planning/planning_sheet.dart';
 import '../progress/progress_screen.dart';
 import '../shop/shop_modal.dart';
 import '../work/work_screen.dart';
+import '../../shared/widgets/color_picker_dialog.dart';
+import '../../shared/widgets/pet_avatar_widget.dart';
 
 import 'wardrobe_sheet.dart';
 
@@ -29,6 +33,183 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
+  Timer? _speechTimer;
+  String? _petSpeech;
+  String? _activeRoomItem;
+  FinnyReaction? _requestedReaction;
+  double _reactionTravel = 0;
+  int _reactionToken = 0;
+
+  void _say(
+    String message, {
+    String? roomItem,
+    FinnyReaction? reaction,
+    double travel = 0,
+  }) {
+    _speechTimer?.cancel();
+    setState(() {
+      _petSpeech = message;
+      _activeRoomItem = roomItem;
+      if (reaction != null) {
+        _requestedReaction = reaction;
+        _reactionTravel = travel;
+        _reactionToken++;
+      }
+    });
+    _speechTimer = Timer(const Duration(seconds: 4), () {
+      if (mounted) {
+        setState(() {
+          _petSpeech = null;
+          _activeRoomItem = null;
+        });
+      }
+    });
+  }
+
+  void _onPetReact(FinnyReaction reaction) {
+    final message = switch (reaction) {
+      FinnyReaction.wave => 'Привет! Рад тебя видеть 👋',
+      FinnyReaction.hop => 'Смотри, как я прыгаю! ✨',
+      FinnyReaction.dance => 'Потанцуем вместе? 🎵',
+      FinnyReaction.cuddle => 'Спасибо, мне хорошо рядом с тобой 💚',
+    };
+    _say(message);
+  }
+
+  void _onRoomItem(String item) {
+    if (ref.read(gameEngineProvider).plannedBudget?.isConfirmed != true) {
+      PlanningSheet.show(context);
+      return;
+    }
+    final before = ref.read(gameEngineProvider);
+    final rain = RegExp('дожд|ливень')
+        .hasMatch(before.forecast.title.toLowerCase());
+    final (message, reaction) = switch (item) {
+      'toy_ball' => ('Лови мяч! Ещё раз? ⚽', FinnyReaction.hop),
+      'toy_robot' => ('Робот танцует, и я тоже! 🤖', FinnyReaction.dance),
+      'cozy_bed' => ('На лежанке так уютно! 🛏️', FinnyReaction.cuddle),
+      'warm_lamp' => ('Светло! Посидим вместе? 💡', FinnyReaction.wave),
+      'kite' when rain => (
+        'Сейчас дождь. Запустим змея позже! 🪁',
+        FinnyReaction.cuddle,
+      ),
+      'kite' => ('Наш змей взлетает высоко! 🪁', FinnyReaction.dance),
+      _ => ('Давай поиграем вместе!', FinnyReaction.wave),
+    };
+    final travel = switch (item) {
+      'cozy_bed' || 'toy_ball' => -28.0,
+      'warm_lamp' || 'toy_robot' || 'kite' => 28.0,
+      _ => 0.0,
+    };
+    final played = ref.read(gameEngineProvider.notifier).interactRoomItem(item);
+    final speech = played
+        ? ref.read(gameEngineProvider).finny.moodReason
+        : before.roomActivityUsedToday
+        ? 'Сегодня мы уже играли с вещами. Завтра можно снова!'
+        : message;
+    _say(speech, roomItem: item, reaction: reaction, travel: travel);
+  }
+
+  @override
+  void dispose() {
+    _speechTimer?.cancel();
+    super.dispose();
+  }
+
+  Future<void> _changeAccent() async {
+    final current = ref.read(appAccentProvider).color;
+    final chosen = await pickFinnyColor(
+      context,
+      title: 'Цвет приложения',
+      initial: current,
+      defaultColor: const Color(0xFFC94C19),
+    );
+    if (chosen == null || !mounted) return;
+    try {
+      await ref.read(appAccentProvider).update(chosen);
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Не удалось сохранить цвет')),
+        );
+      }
+    }
+  }
+
+  Future<void> _renamePet() async {
+    final controller = TextEditingController(
+      text: ref.read(gameEngineProvider).profile.petName,
+    );
+    String? error;
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: FinnyColors.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      showDragHandle: true,
+      builder: (sheetContext) => StatefulBuilder(
+        builder: (sheetContext, refresh) {
+          void save() {
+            final changed = ref
+                .read(gameEngineProvider.notifier)
+                .renamePet(controller.text);
+            if (changed) {
+              Navigator.of(sheetContext).pop();
+            } else {
+              refresh(() => error = 'Введи имя от 1 до 16 букв');
+            }
+          }
+
+          return Padding(
+            padding: EdgeInsets.fromLTRB(
+              20,
+              20,
+              20,
+              MediaQuery.viewInsetsOf(sheetContext).bottom + 20,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const Text(
+                  'Как меня зовут?',
+                  style: TextStyle(fontSize: 23, fontWeight: FontWeight.w900),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: controller,
+                  autofocus: true,
+                  maxLength: 16,
+                  textCapitalization: TextCapitalization.sentences,
+                  textInputAction: TextInputAction.done,
+                  onSubmitted: (_) => save(),
+                  onChanged: (_) {
+                    if (error != null) refresh(() => error = null);
+                  },
+                  decoration: InputDecoration(
+                    labelText: 'Имя питомца',
+                    errorText: error,
+                    border: const OutlineInputBorder(),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                FilledButton(
+                  onPressed: save,
+                  child: const Text('Сохранить имя'),
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+    controller.dispose();
+  }
+
   void _showGuide() {
     showDialog<void>(
       context: context,
@@ -39,35 +220,52 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           'Как играть с Финни?',
           style: TextStyle(fontWeight: FontWeight.w900),
         ),
-        content: const Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'На первый день у тебя 50 монет. Иди по цветным шагам в домике.',
-            ),
-            SizedBox(height: 12),
-            _GuideRow(
-              Icons.donut_small_rounded,
-              'План',
-              'Распредели монеты на бумаге. Пока ничего не списывается.',
-            ),
-            _GuideRow(
-              Icons.handyman_rounded,
-              'Работа и задача',
-              'Решения принесут новые монеты.',
-            ),
-            _GuideRow(
-              Icons.storefront_rounded,
-              'Лавка',
-              'Покупка уменьшит кошелёк, зато даст еду или вещь.',
-            ),
-            _GuideRow(
-              Icons.savings_rounded,
-              'Копилка',
-              'Взнос уменьшит кошелёк и приблизит мечту.',
-            ),
-          ],
+        content: const SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'У Финни есть сытость, силы и здоровье. Каждый день сначала составь короткий план, потом принимай решения.',
+              ),
+              SizedBox(height: 12),
+              _GuideRow(
+                Icons.edit_note_rounded,
+                'План',
+                'Выбери готовый вариант. Монеты останутся в кошельке; вечером сравнишь план и действия.',
+              ),
+              _GuideRow(
+                Icons.view_carousel_rounded,
+                'Карточка',
+                'Выбери вариант. Под кнопкой показано, что изменится.',
+              ),
+              _GuideRow(
+                Icons.handyman_rounded,
+                'Работа',
+                'Мини-игра принесёт монеты, но Финни устанет и проголодается.',
+              ),
+              _GuideRow(
+                Icons.storefront_rounded,
+                'Лавка и еда',
+                'Еда попадает в кладовку. Купленные вещи дают действия в комнате.',
+              ),
+              _GuideRow(
+                Icons.touch_app_rounded,
+                'Комната',
+                'Нажми на купленную вещь: один такой выбор доступен каждый день.',
+              ),
+              _GuideRow(
+                Icons.school_rounded,
+                'Задания',
+                'Новая задача даёт 3 🪙 и немного здоровья.',
+              ),
+              _GuideRow(
+                Icons.savings_rounded,
+                'Копилка',
+                'Откладывай на мечту, оставляя деньги на еду. Полученная мечта порадует Финни.',
+              ),
+            ],
+          ),
         ),
         actions: [
           FilledButton(
@@ -80,15 +278,21 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   void _finishDay(GameState state) {
+    if (state.plannedBudget?.isConfirmed != true) {
+      PlanningSheet.show(context);
+      return;
+    }
+    if (pendingStory(state) != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Сначала выбери ответ на карточке Финни.'),
+        ),
+      );
+      return;
+    }
     final pending = <String>[
-      if (state.plannedBudget?.isConfirmed != true) 'составить план',
-      if (!state.workCompletedToday) 'выполнить поручение',
-      if (kFinancialTasks.any(
-        (task) =>
-            task.day <= state.day &&
-            !state.completedTasks.any((done) => done.taskId == task.id),
-      ))
-        'решить задачу',
+      if (state.balanceStats.cardsToday < 4)
+        'сыграть ещё ${4 - state.balanceStats.cardsToday} карточки',
     ];
     if (pending.isEmpty) {
       ref.read(gameEngineProvider.notifier).finishDayAction();
@@ -121,6 +325,14 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
+  void _openAfterPlan(VoidCallback action) {
+    if (ref.read(gameEngineProvider).plannedBudget?.isConfirmed != true) {
+      PlanningSheet.show(context);
+      return;
+    }
+    action();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -134,10 +346,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     if (!mounted) return;
 
     if (state.phase == GamePhase.eventResolution) {
-      final config = kDaysConfig.firstWhere(
-        (c) => c.day == state.day,
-        orElse: () => kDaysConfig.last,
-      );
+      final config = dayConfigFor(state.day);
       if (config.scheduledEventId != null) {
         EventModal.show(context, config.scheduledEventId!);
       }
@@ -157,6 +366,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       if (previous?.phase != next.phase) {
         _checkPhaseTriggers(next);
       }
+      if (previous != null && previous.day != next.day) {
+        _speechTimer?.cancel();
+        setState(() {
+          _petSpeech = null;
+          _activeRoomItem = null;
+        });
+      }
     });
 
     return Scaffold(
@@ -164,20 +380,27 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       body: SafeArea(
         child: CompactHomeDashboard(
           state: state,
+          demoActive: ref.read(gameRepositoryProvider).isDemoActive,
           wardrobe: () => WardrobeSheet.show(context),
-          pet: () => ref
-              .read(gameEngineProvider.notifier)
-              .setFinnyMood(FinnyMood.happy, 'Как здорово, что ты рядом!'),
-          work: () => WorkScreen.open(context),
-          shop: () => ShopModal.show(context),
+          work: () => _openAfterPlan(() => WorkScreen.open(context)),
+          rename: _renamePet,
+          onPetReact: _onPetReact,
+          onRoomItem: _onRoomItem,
+          petSpeech: _petSpeech,
+          activeRoomItem: _activeRoomItem,
+          requestedReaction: _requestedReaction,
+          reactionTravel: _reactionTravel,
+          reactionToken: _reactionToken,
+          shop: () => _openAfterPlan(() => ShopModal.show(context)),
           plan: () => PlanningSheet.show(context),
-          goal: () => GoalSheet.show(context),
+          goal: () => _openAfterPlan(() => GoalSheet.show(context)),
           task: () => ProgressScreen.openTasks(context),
           finish: () => _finishDay(state),
           guide: _showGuide,
           adult: () => AdultScreen.open(context),
           progress: () => ProgressScreen.open(context),
           demo: () => DemoDrawer.show(context),
+          accent: _changeAccent,
         ),
       ),
     );

@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/finny_tokens.dart';
 import '../../data/models/event_models.dart';
+import '../../data/models/game_state.dart';
 import '../../game/content/events.dart';
 import '../../game/engine/game_engine.dart';
 import '../../shared/widgets/pet_avatar_widget.dart';
@@ -40,7 +41,7 @@ class _EventModalState extends ConsumerState<EventModal> {
   bool useSavings = false;
   bool failed = false;
   bool allowClose = false;
-  bool usedKit = false;
+  bool usedFreeItem = false;
   int beforeWallet = 0;
   int beforeSavings = 0;
 
@@ -69,7 +70,8 @@ class _EventModalState extends ConsumerState<EventModal> {
     setState(() {
       beforeWallet = before.balance;
       beforeSavings = before.savings;
-      usedKit = choice!.freeWithItemId != null &&
+      usedFreeItem =
+          choice!.freeWithItemId != null &&
           before.inventory.hasItem(choice!.freeWithItemId!);
       step = _Step.result;
     });
@@ -91,31 +93,34 @@ class _EventModalState extends ConsumerState<EventModal> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(gameEngineProvider);
-    return PopScope(canPop: allowClose, child: Dialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      backgroundColor: Colors.white,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      child: SizedBox(
-        width: 560,
-        height: math.min(580, MediaQuery.sizeOf(context).height - 36),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(15, 14, 15, 15),
-          child: switch (step) {
-            _Step.choose => _choose(
-              state.balance,
-              state.savings,
-              state.inventory.hasItem('repair_kit'),
-            ),
-            _Step.review => _review(
-              state.balance,
-              state.savings,
-              state.inventory.hasItem('repair_kit'),
-            ),
-            _Step.result => _result(state.balance, state.savings),
-          },
+    return PopScope(
+      canPop: allowClose,
+      child: Dialog(
+        insetPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        backgroundColor: Colors.white,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        child: SizedBox(
+          width: 560,
+          height: math.min(720, MediaQuery.sizeOf(context).height - 24),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(15, 14, 15, 15),
+            child: switch (step) {
+              _Step.choose => _choose(
+                state.balance,
+                state.savings,
+                state.inventory,
+              ),
+              _Step.review => _review(
+                state.balance,
+                state.savings,
+                state.inventory,
+              ),
+              _Step.result => _result(state.balance, state.savings),
+            },
+          ),
         ),
       ),
-    ));
+    );
   }
 
   Widget _title(String heading, String description) => Column(
@@ -132,8 +137,7 @@ class _EventModalState extends ConsumerState<EventModal> {
           Expanded(
             child: Text(
               heading,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+              maxLines: 2,
               style: const TextStyle(
                 fontSize: 19,
                 fontWeight: FontWeight.w900,
@@ -146,8 +150,6 @@ class _EventModalState extends ConsumerState<EventModal> {
       const SizedBox(height: 4),
       Text(
         description,
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
         style: const TextStyle(
           fontSize: 13,
           height: 1.18,
@@ -157,18 +159,28 @@ class _EventModalState extends ConsumerState<EventModal> {
     ],
   );
 
-  Widget _choose(int wallet, int savings, bool hasKit) => Column(
+  Widget _choose(int wallet, int savings, InventoryState inventory) => Column(
     children: [
       _title(event.title, event.description),
       const SizedBox(height: 8),
-      Expanded(child: _Scene(rainy: rainy)),
+      Expanded(
+        child: _Scene(icon: event.icon, rainy: rainy),
+      ),
       const SizedBox(height: 8),
       _Wallet(wallet: wallet, savings: savings),
       const SizedBox(height: 7),
-      for (final option in event.choices) ...[
+      for (final option in event.choices.where(
+        (option) =>
+            option.grantItemId == null ||
+            !inventory.hasItem(option.grantItemId!),
+      )) ...[
         _Choice(
           choice: option,
-          cost: option.freeWithItemId != null && hasKit ? 0 : option.cost,
+          cost:
+              option.freeWithItemId != null &&
+                  inventory.hasItem(option.freeWithItemId!)
+              ? 0
+              : option.cost,
           onTap: () => _select(option),
         ),
         const SizedBox(height: 6),
@@ -181,10 +193,12 @@ class _EventModalState extends ConsumerState<EventModal> {
     ],
   );
 
-  Widget _review(int wallet, int savings, bool hasKit) {
+  Widget _review(int wallet, int savings, InventoryState inventory) {
     final picked = choice!;
-    final kitUsed = picked.freeWithItemId != null && hasKit;
-    final cost = kitUsed ? 0 : picked.cost;
+    final freeItemUsed =
+        picked.freeWithItemId != null &&
+        inventory.hasItem(picked.freeWithItemId!);
+    final cost = freeItemUsed ? 0 : picked.cost;
     final missing = math.max(0, cost - wallet);
     final canBorrow =
         rainy &&
@@ -193,14 +207,16 @@ class _EventModalState extends ConsumerState<EventModal> {
         savings >= missing &&
         ref.read(gameEngineProvider).goal.savedAmount >= missing;
     final canPay = missing == 0 || (canBorrow && useSavings);
-    final walletAfter = wallet >= cost ? wallet - cost : 0;
+    final walletAfter = (wallet - (cost - missing)) + picked.reward;
     final savingsAfter = savings - (useSavings ? missing : 0);
 
     return Column(
       children: [
         _title('Перед решением', picked.title),
         const SizedBox(height: 8),
-        Expanded(child: _Scene(rainy: rainy)),
+        Expanded(
+          child: _Scene(icon: event.icon, rainy: rainy),
+        ),
         const SizedBox(height: 9),
         Container(
           width: double.infinity,
@@ -211,8 +227,6 @@ class _EventModalState extends ConsumerState<EventModal> {
           ),
           child: Text(
             picked.immediateFeedback,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               fontSize: 13,
               height: 1.18,
@@ -224,18 +238,22 @@ class _EventModalState extends ConsumerState<EventModal> {
         const SizedBox(height: 8),
         Row(
           children: [
-            Expanded(child: _Balance('Кошелёк', wallet,
-              canPay ? walletAfter : null)),
+            Expanded(
+              child: _Balance('Кошелёк', wallet, canPay ? walletAfter : null),
+            ),
             const SizedBox(width: 7),
-            Expanded(child: _Balance('Копилка', savings,
-              canPay ? savingsAfter : null)),
+            Expanded(
+              child: _Balance('Копилка', savings, canPay ? savingsAfter : null),
+            ),
           ],
         ),
         const SizedBox(height: 7),
-        if (kitUsed)
-          const _Notice(
-            Icons.handyman_rounded,
-            'Набор мастера будет использован. Доплата — 0 монет.',
+        if (freeItemUsed)
+          _Notice(
+            Icons.inventory_2_rounded,
+            picked.freeWithItemId == 'festival_ticket'
+                ? 'Билет уже оплачен. Доплата — 0 🪙.'
+                : 'Набор мастера будет использован. Доплата — 0 🪙.',
             FinnyColors.success,
           )
         else if (canBorrow)
@@ -272,8 +290,6 @@ class _EventModalState extends ConsumerState<EventModal> {
         const SizedBox(height: 5),
         Text(
           picked.consequenceText,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
           textAlign: TextAlign.center,
           style: const TextStyle(
             fontSize: 12,
@@ -313,10 +329,12 @@ class _EventModalState extends ConsumerState<EventModal> {
             ),
             child: Text(
               canPay
-                  ? 'Подтвердить · $cost монет'
+                  ? picked.reward > 0
+                        ? 'Получить +${picked.reward} 🪙'
+                        : 'Подтвердить · $cost 🪙'
                   : canBorrow
                   ? 'Сначала выбери копилку'
-                  : 'Не хватает $missing монет',
+                  : 'Не хватает $missing 🪙',
               style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w900),
             ),
           ),
@@ -329,7 +347,9 @@ class _EventModalState extends ConsumerState<EventModal> {
     children: [
       _title('Вот что получилось', choice!.title),
       const SizedBox(height: 9),
-      Expanded(child: _Scene(rainy: rainy, resolved: true)),
+      Expanded(
+        child: _Scene(icon: event.icon, rainy: rainy, resolved: true),
+      ),
       const SizedBox(height: 12),
       Row(
         children: [
@@ -356,13 +376,11 @@ class _EventModalState extends ConsumerState<EventModal> {
             const SizedBox(width: 8),
             Expanded(
               child: Text(
-                usedKit
-                    ? 'Набор мастера помог починить крышу без новой траты.'
+                usedFreeItem
+                    ? choice!.consequenceText
                     : savings < beforeSavings
-                    ? '${choice!.consequenceText} Из копилки ушло ${beforeSavings - savings} монет — до мечты теперь дальше.'
+                    ? '${choice!.consequenceText} Из копилки ушло ${beforeSavings - savings} 🪙 — до мечты теперь дальше.'
                     : choice!.consequenceText,
-                maxLines: 4,
-                overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
                   fontSize: 13,
                   height: 1.2,
@@ -390,9 +408,14 @@ class _EventModalState extends ConsumerState<EventModal> {
 }
 
 class _Scene extends StatelessWidget {
+  final String icon;
   final bool rainy;
   final bool resolved;
-  const _Scene({required this.rainy, this.resolved = false});
+  const _Scene({
+    required this.icon,
+    required this.rainy,
+    this.resolved = false,
+  });
 
   @override
   Widget build(BuildContext context) => ClipRRect(
@@ -413,11 +436,7 @@ class _Scene extends StatelessWidget {
           Positioned(
             left: 17,
             bottom: -10,
-            child: Icon(
-              rainy ? Icons.cottage_rounded : Icons.festival_rounded,
-              size: 93,
-              color: rainy ? const Color(0xFF8495AF) : const Color(0xFFEFAA8E),
-            ),
+            child: Text(icon, style: const TextStyle(fontSize: 76)),
           ),
           Positioned(
             left: 25,
@@ -470,21 +489,21 @@ class _Wallet extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Row(
     children: [
-      const Icon(
+      Icon(
         Icons.account_balance_wallet_rounded,
         size: 21,
         color: FinnyColors.primary,
       ),
       const SizedBox(width: 5),
       Text(
-        'Кошелёк $wallet',
+        'Кошелёк $wallet 🪙',
         style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
       ),
       const Spacer(),
       const Icon(Icons.savings_rounded, size: 21, color: FinnyColors.piggy),
       const SizedBox(width: 5),
       Text(
-        'Копилка $savings',
+        'Копилка $savings 🪙',
         style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
       ),
     ],
@@ -510,14 +529,16 @@ class _Choice extends StatelessWidget {
     child: InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(14),
-      child: SizedBox(
-        height: 62,
+      child: Container(
+        constraints: const BoxConstraints(minHeight: 82),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 11),
+          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
           child: Row(
             children: [
               Icon(
-                cost == 0
+                choice.reward > 0
+                    ? Icons.toll_rounded
+                    : cost == 0
                     ? Icons.pan_tool_alt_rounded
                     : cost >= 20
                     ? Icons.handyman_rounded
@@ -533,8 +554,6 @@ class _Choice extends StatelessWidget {
                   children: [
                     Text(
                       choice.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w900,
@@ -542,8 +561,6 @@ class _Choice extends StatelessWidget {
                     ),
                     Text(
                       choice.immediateFeedback,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         fontSize: 11,
                         color: FinnyColors.textSecondary,
@@ -554,15 +571,13 @@ class _Choice extends StatelessWidget {
               ),
               const SizedBox(width: 5),
               Text(
-                '$cost',
-                style: const TextStyle(
-                  fontSize: 17,
+                choice.reward > 0 ? '+${choice.reward} 🪙' : '$cost 🪙',
+                style: TextStyle(
+                  fontSize: 15,
                   fontWeight: FontWeight.w900,
                   color: FinnyColors.primary,
                 ),
               ),
-              const SizedBox(width: 2),
-              const Icon(Icons.toll_rounded, size: 16, color: FinnyColors.coin),
             ],
           ),
         ),
@@ -605,7 +620,7 @@ class _Balance extends StatelessWidget {
                 color: FinnyColors.textPrimary,
               ),
             ),
-            const Padding(
+            Padding(
               padding: EdgeInsets.symmetric(horizontal: 4),
               child: Icon(
                 Icons.arrow_forward_rounded,
@@ -639,8 +654,8 @@ class _Notice extends StatelessWidget {
   final Color color;
   const _Notice(this.icon, this.message, this.color);
   @override
-  Widget build(BuildContext context) => SizedBox(
-    height: 44,
+  Widget build(BuildContext context) => Container(
+    constraints: const BoxConstraints(minHeight: 44),
     child: Row(
       children: [
         Icon(icon, color: color, size: 20),
@@ -648,8 +663,6 @@ class _Notice extends StatelessWidget {
         Expanded(
           child: Text(
             message,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
             style: TextStyle(
               fontSize: 12,
               color: color,

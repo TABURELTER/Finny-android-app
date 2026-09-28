@@ -4,11 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/models/event_models.dart';
+import '../../core/theme/finny_tokens.dart';
+import '../../game/engine/game_engine.dart';
 import '../../shared/widgets/finny_appearance.dart';
+import '../../shared/widgets/color_picker_dialog.dart';
 import '../../shared/widgets/pet_avatar_widget.dart';
 
 const _ink = Color(0xFF342B50);
-const _purple = Color(0xFF7952C4);
+Color get _purple => FinnyColors.primary;
 
 /// All outfit controls stay beside the live preview on a small phone.
 class WardrobeSheet extends ConsumerWidget {
@@ -29,6 +32,10 @@ class WardrobeSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final look = ref.watch(finnyAppearanceProvider);
+    final state = ref.watch(gameEngineProvider);
+    final hasRaincoat = state.inventory.hasItem('raincoat');
+    final raincoatEquipped =
+        hasRaincoat && state.finny.activeOutfit == 'raincoat';
     final height = MediaQuery.sizeOf(context).height;
     final compact = height < 700;
 
@@ -44,6 +51,21 @@ class WardrobeSheet extends ConsumerWidget {
       });
     }
 
+    Future<void> editColor(String part, Color current) async {
+      final picked = await pickFinnyColor(
+        context,
+        title: 'Цвет: $part',
+        initial: current,
+      );
+      if (picked == null || !context.mounted) return;
+      save(switch (part) {
+        'Шёрстка' => look.update(furColor: picked),
+        'Хохолок и ушки' => look.update(tuftColor: picked),
+        'Мордочка' => look.update(bellyColor: picked),
+        _ => look.update(eyeColor: picked),
+      });
+    }
+
     return SizedBox(
       height: height * .96,
       child: SafeArea(
@@ -55,12 +77,16 @@ class WardrobeSheet extends ConsumerWidget {
               Row(
                 children: [
                   Expanded(
-                    child: Text(
-                      'Гардероб Финни',
-                      style: TextStyle(
-                        fontSize: compact ? 20 : 22,
-                        color: _ink,
-                        fontWeight: FontWeight.w900,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        'Гардероб · ${state.profile.petName}',
+                        style: TextStyle(
+                          fontSize: compact ? 20 : 22,
+                          color: _ink,
+                          fontWeight: FontWeight.w900,
+                        ),
                       ),
                     ),
                   ),
@@ -71,12 +97,13 @@ class WardrobeSheet extends ConsumerWidget {
                   ),
                 ],
               ),
-              Expanded(
+              SizedBox(
+                height: math.min(height * .35, 286.0),
                 child: LayoutBuilder(
                   builder: (context, space) {
                     final size = math.min(
                       space.maxHeight - 8,
-                      compact ? 214.0 : 254.0,
+                      math.min(space.maxWidth, 286.0),
                     );
                     return Center(
                       child: Container(
@@ -89,7 +116,13 @@ class WardrobeSheet extends ConsumerWidget {
                         child: Center(
                           child: PetAvatarWidget(
                             mood: FinnyMood.good,
-                            size: size * .98,
+                            size: finnyPreviewSize(
+                              BoxConstraints.tightFor(
+                                width: size,
+                                height: size,
+                              ),
+                            ),
+                            hasRaincoat: raincoatEquipped,
                           ),
                         ),
                       ),
@@ -97,119 +130,204 @@ class WardrobeSheet extends ConsumerWidget {
                   },
                 ),
               ),
-              const Text(
-                'Выбирай свой образ. Наряд сохраняется автоматически.',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(fontSize: 11, color: Color(0xFF746E83)),
-              ),
-              SizedBox(height: compact ? 5 : 10),
-              _OptionGroup(
-                title: 'Окрас',
-                compact: compact,
-                selected: look.palette,
-                options: const [
-                  _LookChoice(
-                    'original',
-                    'Лесная магия',
-                    Color(0xFF8650D8),
-                    Icons.circle,
-                  ),
-                  _LookChoice(
-                    'lagoon',
-                    'Лагуна',
-                    Color(0xFF228DB0),
-                    Icons.circle,
-                  ),
-                  _LookChoice(
-                    'apricot',
-                    'Абрикос',
-                    Color(0xFFE69A6F),
-                    Icons.circle,
-                  ),
-                ],
-                onSelect: (value) => save(look.update(palette: value)),
-              ),
-              _OptionGroup(
-                title: 'Куртка',
-                compact: compact,
-                selected: look.jacket,
-                options: const [
-                  _LookChoice(
-                    'none',
-                    'Без куртки',
-                    Color(0xFFB0A9B8),
-                    Icons.block_rounded,
-                  ),
-                  _LookChoice(
-                    'blue',
-                    'Синяя',
-                    Color(0xFF398CB3),
-                    Icons.checkroom_rounded,
-                  ),
-                  _LookChoice(
-                    'coral',
-                    'Коралл',
-                    Color(0xFFE78478),
-                    Icons.checkroom_rounded,
-                  ),
-                  _LookChoice(
-                    'mint',
-                    'Мятная',
-                    Color(0xFF5CA890),
-                    Icons.checkroom_rounded,
-                  ),
-                ],
-                onSelect: (value) => save(look.update(jacket: value)),
-              ),
-              _OptionGroup(
-                title: 'Шапка',
-                compact: compact,
-                selected: look.hat,
-                options: const [
-                  _LookChoice(
-                    'none',
-                    'Без шапки',
-                    Color(0xFFB0A9B8),
-                    Icons.block_rounded,
-                  ),
-                  _LookChoice(
-                    'beanie',
-                    'С помпоном',
-                    Color(0xFF7952C4),
-                    Icons.ac_unit_rounded,
-                  ),
-                  _LookChoice(
-                    'beret',
-                    'Берет',
-                    Color(0xFFE78478),
-                    Icons.style_rounded,
-                  ),
-                ],
-                onSelect: (value) => save(look.update(hat: value)),
-              ),
-              Padding(
-                padding: EdgeInsets.only(top: compact ? 2 : 7),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: _AccessoryButton(
-                        label: 'Очки',
-                        icon: Icons.visibility_rounded,
-                        selected: look.glasses,
-                        onTap: () => save(look.update(glasses: !look.glasses)),
+              Expanded(
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      SizedBox(height: compact ? 5 : 10),
+                      _OptionGroup(
+                        title: 'Окрас',
+                        compact: compact,
+                        selected: look.palette,
+                        options: [
+                          const _LookChoice(
+                            'original',
+                            'Лесная магия',
+                            Color(0xFF8650D8),
+                            Icons.circle,
+                          ),
+                          const _LookChoice(
+                            'lagoon',
+                            'Лагуна',
+                            Color(0xFF228DB0),
+                            Icons.circle,
+                          ),
+                          const _LookChoice(
+                            'apricot',
+                            'Абрикос',
+                            Color(0xFFE69A6F),
+                            Icons.circle,
+                          ),
+                          _LookChoice(
+                            'custom',
+                            'Свой цвет',
+                            look.furColor,
+                            Icons.palette_rounded,
+                          ),
+                        ],
+                        onSelect: (value) => save(look.update(palette: value)),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _AccessoryButton(
-                        label: 'Бабочка',
-                        icon: Icons.auto_awesome_rounded,
-                        selected: look.bow,
-                        onTap: () => save(look.update(bow: !look.bow)),
+                      if (look.palette == 'custom') ...[
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            'Раскрась Финни',
+                            style: TextStyle(
+                              color: _ink,
+                              fontSize: compact ? 15 : 16,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 5),
+                        LayoutBuilder(
+                          builder: (context, area) => Wrap(
+                            spacing: 7,
+                            runSpacing: 7,
+                            children: [
+                              SizedBox(
+                                width: (area.maxWidth - 7) / 2,
+                                child: _ColorEdit(
+                                  'Шёрстка',
+                                  look.furColor,
+                                  () => editColor('Шёрстка', look.furColor),
+                                ),
+                              ),
+                              SizedBox(
+                                width: (area.maxWidth - 7) / 2,
+                                child: _ColorEdit(
+                                  'Хохолок и ушки',
+                                  look.tuftColor,
+                                  () => editColor(
+                                    'Хохолок и ушки',
+                                    look.tuftColor,
+                                  ),
+                                ),
+                              ),
+                              SizedBox(
+                                width: (area.maxWidth - 7) / 2,
+                                child: _ColorEdit(
+                                  'Мордочка',
+                                  look.bellyColor,
+                                  () => editColor('Мордочка', look.bellyColor),
+                                ),
+                              ),
+                              SizedBox(
+                                width: (area.maxWidth - 7) / 2,
+                                child: _ColorEdit(
+                                  'Глаза',
+                                  look.eyeColor,
+                                  () => editColor('Глаза', look.eyeColor),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: 9),
+                      ],
+                      _OptionGroup(
+                        title: 'Куртка',
+                        compact: compact,
+                        selected: raincoatEquipped ? 'raincoat' : look.jacket,
+                        options: [
+                          _LookChoice(
+                            'none',
+                            'Без куртки',
+                            Color(0xFFB0A9B8),
+                            Icons.block_rounded,
+                          ),
+                          _LookChoice(
+                            'blue',
+                            'Синяя',
+                            Color(0xFF398CB3),
+                            Icons.checkroom_rounded,
+                          ),
+                          _LookChoice(
+                            'coral',
+                            'Коралл',
+                            Color(0xFFE78478),
+                            Icons.checkroom_rounded,
+                          ),
+                          _LookChoice(
+                            'mint',
+                            'Мятная',
+                            Color(0xFF5CA890),
+                            Icons.checkroom_rounded,
+                          ),
+                          if (hasRaincoat)
+                            const _LookChoice(
+                              'raincoat',
+                              'Жёлтый дождевик',
+                              Color(0xFFF5C94B),
+                              Icons.umbrella_rounded,
+                            ),
+                        ],
+                        onSelect: (value) {
+                          if (value == 'raincoat') {
+                            ref
+                                .read(gameEngineProvider.notifier)
+                                .equipRaincoat(true);
+                          } else {
+                            ref
+                                .read(gameEngineProvider.notifier)
+                                .equipRaincoat(false);
+                            save(look.update(jacket: value));
+                          }
+                        },
                       ),
-                    ),
-                  ],
+                      _OptionGroup(
+                        title: 'Шапка',
+                        compact: compact,
+                        selected: look.hat,
+                        options: const [
+                          _LookChoice(
+                            'none',
+                            'Без шапки',
+                            Color(0xFFB0A9B8),
+                            Icons.block_rounded,
+                          ),
+                          _LookChoice(
+                            'beanie',
+                            'С помпоном',
+                            Color(0xFF7952C4),
+                            Icons.ac_unit_rounded,
+                          ),
+                          _LookChoice(
+                            'beret',
+                            'Берет',
+                            Color(0xFFE78478),
+                            Icons.style_rounded,
+                          ),
+                        ],
+                        onSelect: (value) => save(look.update(hat: value)),
+                      ),
+                      Padding(
+                        padding: EdgeInsets.only(top: compact ? 2 : 7),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: _AccessoryButton(
+                                label: 'Очки',
+                                icon: Icons.visibility_rounded,
+                                selected: look.glasses,
+                                onTap: () =>
+                                    save(look.update(glasses: !look.glasses)),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: _AccessoryButton(
+                                label: 'Бабочка',
+                                icon: Icons.auto_awesome_rounded,
+                                selected: look.bow,
+                                onTap: () => save(look.update(bow: !look.bow)),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],
@@ -225,6 +343,24 @@ class _LookChoice {
   final Color color;
   final IconData icon;
   const _LookChoice(this.id, this.label, this.color, this.icon);
+}
+
+class _ColorEdit extends StatelessWidget {
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+  const _ColorEdit(this.label, this.color, this.onTap);
+
+  @override
+  Widget build(BuildContext context) => OutlinedButton.icon(
+    onPressed: onTap,
+    icon: CircleAvatar(radius: 10, backgroundColor: color),
+    label: FittedBox(fit: BoxFit.scaleDown, child: Text(label)),
+    style: OutlinedButton.styleFrom(
+      foregroundColor: _ink,
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+    ),
+  );
 }
 
 class _OptionGroup extends StatelessWidget {
@@ -255,20 +391,26 @@ class _OptionGroup extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 4),
-        Row(
-          children: [
-            for (var i = 0; i < options.length; i++) ...[
-              if (i > 0) const SizedBox(width: 6),
-              Expanded(
-                child: _OptionCard(
-                  option: options[i],
-                  selected: options[i].id == selected,
-                  compact: compact,
-                  onTap: () => onSelect(options[i].id),
+        LayoutBuilder(
+          builder: (context, space) => Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: [
+              for (var i = 0; i < options.length; i++) ...[
+                SizedBox(
+                  width:
+                      (space.maxWidth - (options.length >= 4 ? 6 : 12)) /
+                      (options.length >= 4 ? 2 : 3),
+                  child: _OptionCard(
+                    option: options[i],
+                    selected: options[i].id == selected,
+                    compact: compact,
+                    onTap: () => onSelect(options[i].id),
+                  ),
                 ),
-              ),
+              ],
             ],
-          ],
+          ),
         ),
       ],
     ),
@@ -291,7 +433,7 @@ class _OptionCard extends StatelessWidget {
     button: true,
     selected: selected,
     child: Material(
-      color: selected ? const Color(0xFFF1E9FF) : Colors.white,
+      color: selected ? FinnyColors.primaryLight : Colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(15),
         side: BorderSide(
@@ -303,7 +445,7 @@ class _OptionCard extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(15),
         child: SizedBox(
-          height: compact ? 46 : 56,
+          height: compact ? 55 : 62,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -311,8 +453,7 @@ class _OptionCard extends StatelessWidget {
               const SizedBox(height: 1),
               Text(
                 option.label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+                maxLines: 2,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: compact ? 11 : 12,
@@ -345,7 +486,7 @@ class _AccessoryButton extends StatelessWidget {
     button: true,
     selected: selected,
     child: Material(
-      color: selected ? const Color(0xFFF1E9FF) : const Color(0xFFF5F0E8),
+      color: selected ? FinnyColors.primaryLight : const Color(0xFFF5F0E8),
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
         onTap: onTap,
@@ -367,7 +508,7 @@ class _AccessoryButton extends StatelessWidget {
               ),
               if (selected) ...[
                 const SizedBox(width: 5),
-                const Icon(Icons.check_rounded, size: 15, color: _purple),
+                Icon(Icons.check_rounded, size: 15, color: _purple),
               ],
             ],
           ),

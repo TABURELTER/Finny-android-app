@@ -20,58 +20,119 @@ class DayContentConfig {
   });
 }
 
+/// A short line for Finny's speech bubble at the start of each day.
+String finnyMorningGreeting(int day) => switch (day) {
+  1 => 'Доброе утро! Обустроим мой домик?',
+  2 => 'Ветерок! Что сегодня важнее?',
+  3 => 'Я готов копить на нашу мечту!',
+  4 => 'Вижу тучи. Сделаем запас на завтра?',
+  5 => 'Слышишь ливень? Справимся вместе!',
+  6 => 'Солнце вернулось! Во что поиграем?',
+  7 => 'Скоро праздник. Сохраним немного 🪙?',
+  8 => 'Ярмарка началась! Выберем самое интересное?',
+  9 => 'Мечта уже близко! Я верю в нас.',
+  10 => 'Наш большой день! Покажем, чему научились?',
+  _ => [
+    'Доброе утро! Что сделаем сегодня?',
+    'Новый день — новый выбор. Я готов!',
+    'Интересно, что нас ждёт за окном?',
+    'Давай позаботимся друг о друге!',
+  ][day % 4],
+};
+
+/// The first ten days are authored chapters; afterwards the same game loop
+/// continues with changing weather and fresh procedural decisions.
+DayContentConfig dayConfigFor(int day) {
+  if (day <= kDaysConfig.length) {
+    return kDaysConfig[(day - 1).clamp(0, kDaysConfig.length - 1)];
+  }
+  const forecasts = [
+    ForecastInfo(
+      title: 'Ясно и тепло',
+      icon: '☀️',
+      hint: 'Хороший день для прогулки.',
+    ),
+    ForecastInfo(
+      title: 'Ветерок',
+      icon: '🌤️',
+      hint: 'Ветер зовёт посмотреть во двор.',
+    ),
+    ForecastInfo(
+      title: 'Дождь',
+      icon: '🌧️',
+      hint: 'Для прогулки пригодится дождевик.',
+    ),
+    ForecastInfo(
+      title: 'Облачно',
+      icon: '☁️',
+      hint: 'Можно выбрать домашние дела.',
+    ),
+  ];
+  return DayContentConfig(
+    day: day,
+    baseIncome: 3,
+    forecast: forecasts[(day - 11) % forecasts.length],
+    dayTitle: 'День $day: Новые приключения',
+    morningMessage: 'Семья дала на день 3 🪙. ${finnyMorningGreeting(day)}',
+  );
+}
+
 final List<DayContentConfig> kDaysConfig = [
   const DayContentConfig(
     day: 1,
-    baseIncome: 50,
+    baseIncome: 20,
     forecast: ForecastInfo(
       title: 'Солнечно',
       icon: '☀️',
       hint: 'Сегодня Финни обустраивает свой новый домик.',
     ),
     financialTaskId: 'task_day_2',
-    dayTitle: 'День 1: Три конверта',
-    morningMessage: 'У Финни 50 монет. Составь план: что нужно сегодня, что хочется и сколько отложить.',
+    scheduledEventId: 'first_home',
+    dayTitle: 'День 1: Новый домик',
+    morningMessage: 'Семья дала Финни 20 🪙. Сначала составим план на день?',
   ),
   const DayContentConfig(
     day: 2,
-    baseIncome: 10,
+    baseIncome: 3,
     forecast: ForecastInfo(
       title: 'Ветерок',
       icon: '🌤️',
-      hint: 'Запасы еды закончатся завтра! Пора подумать о плане.',
+      hint: 'В кладовке мало еды. Сегодня можно пополнить запас.',
     ),
     financialTaskId: 'task_day_4',
+    scheduledEventId: 'market_find',
     dayTitle: 'День 2: Корзина и сдача',
-    morningMessage: 'Новый день принёс 10 монет. Сравни покупки и проверь сдачу.',
+    morningMessage: 'Семья дала на день 3 🪙. В лавке есть еда для запасов.',
   ),
   const DayContentConfig(
     day: 3,
-    baseIncome: 10,
+    baseIncome: 3,
     forecast: ForecastInfo(
       title: 'Ясно и тепло',
       icon: '☀️',
       hint: 'Финни мечтает о большой цели. Пора открыть копилку!',
     ),
     financialTaskId: 'task_day_3',
+    scheduledEventId: 'garden_help',
     dayTitle: 'День 3: Дорожка к мечте',
-    morningMessage: 'Сегодня попробуй наметить небольшие взносы в копилку.',
+    morningMessage: 'Семья дала на день 3 🪙. Что взять за помощь соседке?',
   ),
   const DayContentConfig(
     day: 4,
-    baseIncome: 10,
+    baseIncome: 3,
     forecast: ForecastInfo(
       title: 'Надвигаются тучи',
       icon: '🌥️',
       hint: 'Завтра синоптики обещают затяжной ливень! Подготовься заранее.',
     ),
     financialTaskId: 'task_day_6',
+    scheduledEventId: 'storm_warning',
     dayTitle: 'День 4: Запас на завтра',
-    morningMessage: 'Завтра возможен ливень. Подумай, что понадобится Финни и что можно отложить.',
+    morningMessage: 'Семья дала на день 3 🪙. Завтра ливень: сделаем запас?',
   ),
   const DayContentConfig(
     day: 5,
-    baseIncome: 10,
+    baseIncome: 3,
     forecast: ForecastInfo(
       title: 'Грозовой ливень',
       icon: '🌧️',
@@ -80,35 +141,37 @@ final List<DayContentConfig> kDaysConfig = [
     scheduledEventId: 'rain_roof',
     financialTaskId: 'task_day_7',
     dayTitle: 'День 5: План Б',
-    morningMessage: 'Ливень повредил крышу. Запас и обдуманный выбор помогут Финни справиться.',
+    morningMessage: 'Семья дала на день 3 🪙. Крыша течёт: как помочь?',
   ),
   const DayContentConfig(
     day: 6,
-    baseIncome: 20,
+    baseIncome: 3,
     forecast: ForecastInfo(
       title: 'Солнечно и свежо',
       icon: '🌤️',
       hint: 'После дождя выглянуло солнце. В магазин завезли новинку!',
     ),
     financialTaskId: null,
+    scheduledEventId: 'lantern_workshop',
     dayTitle: 'День 6: Свой выбор',
-    morningMessage: 'Ты уже умеешь сравнивать цены. Продолжай строить свой план и заботиться о Финни.',
+    morningMessage: 'Семья дала на день 3 🪙. В мастерской выберем награду.',
   ),
   const DayContentConfig(
     day: 7,
-    baseIncome: 20,
+    baseIncome: 3,
     forecast: ForecastInfo(
       title: 'Праздничные огни',
       icon: '🎪',
-      hint: 'Завтра на площади Большой Праздник! Билет стоит 15 монет.',
+      hint: 'Завтра на площади Большой Праздник! Билет стоит 15 🪙.',
     ),
     financialTaskId: null,
     dayTitle: 'День 7: Подготовка к празднику',
-    morningMessage: 'Завтра праздник. Реши, сколько сохранить на билет и что нужно сегодня.',
+    scheduledEventId: 'festival_preview',
+    morningMessage: 'Семья дала на день 3 🪙. Билет сегодня дешевле.',
   ),
   const DayContentConfig(
     day: 8,
-    baseIncome: 25,
+    baseIncome: 3,
     forecast: ForecastInfo(
       title: 'Ярмарка и музыка',
       icon: '🎡',
@@ -117,30 +180,32 @@ final List<DayContentConfig> kDaysConfig = [
     scheduledEventId: 'city_festival',
     financialTaskId: null,
     dayTitle: 'День 8: Городской праздник',
-    morningMessage: 'Сегодня день ярмарки! Время веселья или спокойной прогулки.',
+    morningMessage: 'Семья дала на день 3 🪙. Карусели или концерт?',
   ),
   const DayContentConfig(
     day: 9,
-    baseIncome: 20,
+    baseIncome: 3,
     forecast: ForecastInfo(
       title: 'Чистое небо',
       icon: '✨',
       hint: 'До большой мечты остался последний рывок!',
     ),
     financialTaskId: null,
+    scheduledEventId: 'windy_gift',
     dayTitle: 'День 9: Финальный рывок',
-    morningMessage: 'Цель уже совсем близко! Рассчитай последние монеты.',
+    morningMessage: 'Семья дала на день 3 🪙. Змей или деньги на мечту?',
   ),
   const DayContentConfig(
     day: 10,
-    baseIncome: 10,
+    baseIncome: 3,
     forecast: ForecastInfo(
-      title: 'Торжественный день',
+      title: 'Ясно и тепло',
       icon: '🌟',
-      hint: 'Финальный день нашей маленькой 10-дневной жизни!',
+      hint: 'Первые десять дней позади, а приключения продолжаются.',
     ),
     financialTaskId: null,
-    dayTitle: 'День 10: Большой финал',
-    morningMessage: 'Ура! Сегодня мы подводим итоги всех 10 дней с Финни!',
+    dayTitle: 'День 10: Первые итоги',
+    scheduledEventId: 'last_day',
+    morningMessage: 'Семья дала на день 3 🪙. Сегодня подведём итоги.',
   ),
 ];

@@ -15,9 +15,9 @@ import 'finny_tokens.dart' as tokens;
 
 class FinnyColors {
   // Brand
-  static const Color primary = tokens.FinnyColors.primary;
-  static const Color primaryLight = tokens.FinnyColors.primaryLight;
-  static const Color primaryDark = tokens.FinnyColors.primaryDark;
+  static Color get primary => tokens.FinnyColors.primary;
+  static Color get primaryLight => tokens.FinnyColors.primaryLight;
+  static Color get primaryDark => tokens.FinnyColors.primaryDark;
 
   // Coin
   static const Color coinGold = tokens.FinnyColors.coin;
@@ -51,7 +51,7 @@ class FinnyColors {
   static const Color textMuted = tokens.FinnyColors.textSecondary;
 
   // Accent / Warning
-  static const Color accentPurple = tokens.FinnyColors.accent;
+  static Color get accentPurple => tokens.FinnyColors.accent;
   static const Color warningRed = tokens.FinnyColors.danger;
   static const Color borderSubtle = tokens.FinnyColors.border;
 

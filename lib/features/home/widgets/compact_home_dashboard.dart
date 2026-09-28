@@ -1,22 +1,28 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/theme/finny_tokens.dart';
 import '../../../data/models/game_state.dart';
 import '../../../game/content/financial_tasks.dart';
+import '../../../game/content/days.dart';
 import '../../../game/content/goals.dart';
-import '../../../game/content/shop_items.dart';
 import '../../../shared/widgets/pet_avatar_widget.dart';
-import 'home_dashboard.dart' show FinnyRoomPainter;
+import '../../../shared/widgets/room_scene_svg.dart';
+import 'balance_decision_card.dart';
 
-const _ink = Color(0xFF342B50);
-const _purple = Color(0xFF6B3DC6);
-const _cream = Color(0xFFFFFCF6);
+const _ink = FinnyColors.textPrimary;
+const _cream = FinnyColors.surface;
 
-/// A single-screen home: the scene takes the remaining height, while every
-/// action and the current financial state remain visible on a small phone.
+String _displayCoinAmounts(String message) => message.replaceAllMapped(
+  RegExp(r'(\d+)\s+монет(?:а|ы)?', caseSensitive: false),
+  (match) => '${match[1]} 🪙',
+);
+
+/// One playable scene: the room, Finny's condition, and the next decision
+/// share a single surface without moving the screen.
 class CompactHomeDashboard extends StatelessWidget {
   final GameState state;
+  final bool demoActive;
   final VoidCallback wardrobe,
-      pet,
       work,
       shop,
       plan,
@@ -27,13 +33,25 @@ class CompactHomeDashboard extends StatelessWidget {
       adult,
       progress,
       demo;
+  final VoidCallback? accent;
+  final VoidCallback? rename;
+  final VoidCallback? pet;
+  final ValueChanged<FinnyReaction>? onPetReact;
+  final ValueChanged<String>? onRoomItem;
+  final String? petSpeech;
+  final String? activeRoomItem;
+  final FinnyReaction? requestedReaction;
+  final double reactionTravel;
+  final int reactionToken;
 
   const CompactHomeDashboard({
     super.key,
     required this.state,
+    this.demoActive = false,
     required this.wardrobe,
-    required this.pet,
     required this.work,
+    this.rename,
+    this.pet,
     required this.shop,
     required this.plan,
     required this.goal,
@@ -43,547 +61,394 @@ class CompactHomeDashboard extends StatelessWidget {
     required this.adult,
     required this.progress,
     required this.demo,
+    this.accent,
+    this.onPetReact,
+    this.onRoomItem,
+    this.petSpeech,
+    this.activeRoomItem,
+    this.requestedReaction,
+    this.reactionTravel = 0,
+    this.reactionToken = 0,
   });
 
   @override
   Widget build(BuildContext context) {
-    final compactWidth = MediaQuery.sizeOf(context).width < 350;
-    final goalDef = kAvailableGoals.firstWhere(
-      (item) => item.id == state.goal.goalId,
-      orElse: () => kAvailableGoals.first,
-    );
-    final goalOwned = state.inventory.hasItem('goal_${goalDef.id}');
-    final displayedReward = kAvailableGoals
-        .where((item) => state.inventory.hasItem('goal_${item.id}'))
-        .toList();
-    final planned = state.plannedBudget?.isConfirmed == true;
-    final hasTask = kFinancialTasks.any(
-      (challenge) =>
-          challenge.day <= state.day &&
-          !state.completedTasks.any((done) => done.taskId == challenge.id),
-    );
-    final foodNeedsAttention = state.inventory.foodReserveDays < 2;
-    final oneDayFoodPrice = kShopCatalog
-        .firstWhere((item) => item.id == 'food_1')
-        .price;
-    final canBuyFood = state.balance >= oneDayFoodPrice;
-    final shouldShop = foodNeedsAttention && canBuyFood;
-    final shouldSave = state.daySaved == 0 && state.balance > 0;
-    final careComplete = !foodNeedsAttention && !shouldSave;
-    final step = !planned
-        ? 0
-        : !state.workCompletedToday
-        ? 1
-        : hasTask
-        ? 2
-        : careComplete
-        ? 4
-        : 3;
-    final nextAction = switch (step) {
-      0 => plan,
-      1 => work,
-      2 => task,
-      _ when shouldShop => shop,
-      _ when shouldSave => goal,
-      _ => finish,
-    };
-    final nextTitle = switch (step) {
-      0 => 'Решим, куда пойдут монеты',
-      1 => 'Заработаем ещё монеты',
-      2 => 'Потренируемся вместе',
-      _ when shouldShop => 'Купим еду на завтра',
-      _ when foodNeedsAttention => 'Посмотрим итоги дня',
-      _ when shouldSave => 'Отложим часть на мечту',
-      _ => 'Посмотрим итоги дня',
-    };
-    final nextDetail = switch (step) {
-      0 => 'План не списывает деньги',
-      1 => 'Поручение добавит 10 монет',
-      2 => 'Задача добавит 5 монет',
-      _ when shouldShop => 'Один завтрак стоит $oneDayFoodPrice монет',
-      _ when foodNeedsAttention => 'На еду пока не хватает монет',
-      _ when shouldSave => 'Взнос перейдёт из кошелька в копилку',
-      _ => 'Что получилось за сегодняшний день?',
-    };
-    final roomMessage = !planned
-        ? 'У меня ${state.balance} монет! Сначала решим, что нужно, а что можно отложить.'
-        : planned && !state.workCompletedToday
-        ? 'План готов! Монеты пока в кошельке. Поможешь мне заработать ещё?'
-        : state.finny.moodReason;
-    final rain = RegExp('дожд|ливень')
-        .hasMatch(state.forecast.title.toLowerCase());
-
+    final roomMessage =
+        petSpeech ??
+        (state.plannedBudget?.isConfirmed != true
+            ? dayConfigFor(state.day).morningMessage
+            : state.balanceStats.cardsToday == 0 &&
+                  state.balanceStats.satiety <= 1
+            ? 'Я проголодался. Поможешь выбрать еду?'
+            : _displayCoinAmounts(state.finny.moodReason)
+                  .replaceFirst(RegExp(r'^Финни '), 'Я '));
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 560),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 4, 16, 4),
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  Text(
-                    'finny',
-                    style: TextStyle(
-                      color: _purple,
-                      fontSize: compactWidth ? 22 : 27,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -1.3,
-                    ),
-                  ),
-                  const Spacer(),
-                  _AmountPill(
-                    Icons.toll_rounded,
-                    state.balance,
-                    'Монеты',
-                    const Color(0xFFFFE9A3),
-                  ),
-                  const SizedBox(width: 6),
-                  _AmountPill(
-                    Icons.savings_rounded,
-                    state.savings,
-                    'Копилка',
-                    const Color(0xFFE5D5FF),
-                  ),
-                  PopupMenuButton<String>(
-                    tooltip: 'Меню',
-                    icon: const Icon(Icons.more_horiz_rounded, color: _ink),
-                    onSelected: (value) => switch (value) {
-                      'progress' => progress(),
-                      'tasks' => task(),
-                      'adult' => adult(),
-                      'demo' => demo(),
-                      'guide' => guide(),
-                      _ => null,
-                    },
-                    itemBuilder: (_) => const [
-                      PopupMenuItem(value: 'guide', child: Text('Как играть')),
-                      PopupMenuItem(value: 'progress', child: Text('Дневник')),
-                      PopupMenuItem(value: 'tasks', child: Text('Задачи')),
-                      PopupMenuItem(value: 'adult', child: Text('Родителям')),
-                      PopupMenuItem(value: 'demo', child: Text('Демо')),
-                    ],
-                  ),
-                ],
-              ),
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Домик · ${state.profile.petName}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 19,
-                        fontWeight: FontWeight.w900,
-                        color: _ink,
+        child: Column(
+          children: [
+            _HomeHeader(
+              state: state,
+              rename: rename,
+              guide: guide,
+              work: work,
+              plan: plan,
+              task: task,
+              adult: adult,
+              progress: progress,
+              demo: demo,
+              accent: accent,
+            ),
+            Expanded(
+              child: LayoutBuilder(
+                builder: (context, viewport) {
+                  final roomHeight = (viewport.maxHeight * .38).clamp(
+                    112.0,
+                    245.0,
+                  );
+                  return Padding(
+                    padding: const EdgeInsets.fromLTRB(14, 6, 14, 7),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: _cream,
+                        borderRadius: BorderRadius.circular(24),
+                        border: Border.all(color: FinnyColors.border),
+                        boxShadow: FinnyShadows.sm,
                       ),
-                    ),
-                  ),
-                  Text(
-                    'День ${state.day}',
-                    style: const TextStyle(
-                      color: _purple,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 4),
-              Row(
-                children: [
-                  for (final (index, label) in [
-                    'План',
-                    'Работа',
-                    'Задача',
-                    'Забота',
-                  ].indexed)
-                    Expanded(
-                      child: Padding(
-                        padding: EdgeInsets.only(right: index == 3 ? 0 : 4),
-                        child: _JourneyStep(
-                          label: label,
-                          number: index + 1,
-                          active: step == index,
-                          completed: step > index,
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-              const SizedBox(height: 5),
-              Expanded(
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(24),
-                  child: LayoutBuilder(
-                    builder: (context, room) => Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        Positioned.fill(
-                          child: CustomPaint(
-                            painter: FinnyRoomPainter(
-                              rain: rain,
-                              bed: state.inventory.hasItem('cozy_bed'),
-                              lamp: state.inventory.hasItem('warm_lamp'),
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          top: 9,
-                          left: 12,
-                          right: 12,
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              color: _cream,
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            child: Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 6,
-                              ),
-                              child: Text(
-                                roomMessage,
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                                textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  fontSize: 13,
-                                  height: 1.15,
-                                  fontWeight: FontWeight.w700,
-                                  color: _ink,
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          bottom: 7,
-                          child: PetAvatarWidget(
-                            mood: state.finny.mood,
-                            stage: state.finny.stage,
-                            size: (room.maxHeight * .76).clamp(
-                              105.0,
-                              room.maxWidth - 70,
-                            ),
-                            hasRaincoat:
-                                rain && state.inventory.hasItem('raincoat'),
-                            onTap: pet,
-                          ),
-                        ),
-                        Positioned(
-                          left: 8,
-                          bottom: 8,
-                          child: IconButton.filledTonal(
-                            tooltip: 'Гардероб',
-                            onPressed: wardrobe,
-                            style: IconButton.styleFrom(
-                              minimumSize: const Size(48, 48),
-                              backgroundColor: _cream,
-                              foregroundColor: _purple,
-                            ),
-                            icon: const Icon(Icons.checkroom_rounded),
-                          ),
-                        ),
-                        Positioned(
-                          right: 8,
-                          bottom: 9,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: _cream,
-                              borderRadius: BorderRadius.circular(14),
-                            ),
-                            child: Text(
-                              state.inventory.foodReserveDays > 0
-                                  ? 'Еда: ${state.inventory.foodReserveDays} дн.'
-                                  : 'Пора поесть',
-                              style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w800,
-                                color: _ink,
-                              ),
-                            ),
-                          ),
-                        ),
-                        if (displayedReward.isNotEmpty)
-                          Positioned(
-                            right: 15,
-                            top: 55,
-                            child: Tooltip(
-                              message:
-                                  'Мечта сбылась: ${displayedReward.first.name}',
-                              child: Container(
-                                width: 42,
-                                height: 42,
-                                decoration: const BoxDecoration(
-                                  color: _cream,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Icon(
-                                  displayedReward.first.id == 'skate'
-                                      ? Icons.skateboarding_rounded
-                                      : displayedReward.first.id == 'treehouse'
-                                      ? Icons.forest_rounded
-                                      : Icons.rocket_launch_rounded,
-                                  color: _purple,
-                                ),
-                              ),
-                            ),
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 5),
-              Row(
-                children: [
-                  Icon(
-                    rain ? Icons.umbrella_rounded : Icons.wb_sunny_rounded,
-                    size: 15,
-                    color: const Color(0xFF977954),
-                  ),
-                  const SizedBox(width: 5),
-                  Expanded(
-                    child: Text(
-                      state.forecast.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: Color(0xFF776C80),
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 5),
-              Material(
-                color: Colors.transparent,
-                borderRadius: BorderRadius.circular(18),
-                elevation: 3,
-                shadowColor: _purple.withValues(alpha: .22),
-                child: InkWell(
-                  onTap: nextAction,
-                  borderRadius: BorderRadius.circular(18),
-                  child: Ink(
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFF8152DF), Color(0xFF582EB4)],
-                      ),
-                      borderRadius: BorderRadius.circular(18),
-                    ),
-                    child: SizedBox(
-                      height: 61,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 14),
-                        child: Row(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(23),
+                        child: Column(
                           children: [
-                            const Icon(
-                              Icons.play_circle_fill_rounded,
-                              color: Color(0xFFFFE9A3),
-                              size: 26,
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    nextTitle,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      color: Colors.white,
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w900,
+                            SizedBox(
+                              height: roomHeight,
+                              child: LayoutBuilder(
+                                builder: (context, room) => Stack(
+                                  alignment: Alignment.center,
+                                  children: [
+                                    Positioned.fill(
+                                      child: RoomSceneSvg(
+                                        forecast: state.forecast,
+                                        bed: state.inventory.hasItem(
+                                          'cozy_bed',
+                                        ),
+                                        lamp: state.inventory.hasItem(
+                                          'warm_lamp',
+                                        ),
+                                        ball: state.inventory.hasItem(
+                                          'toy_ball',
+                                        ),
+                                        robot: state.inventory.hasItem(
+                                          'toy_robot',
+                                        ),
+                                        kite: state.inventory.hasItem('kite'),
+                                        activeItem: activeRoomItem,
+                                      ),
                                     ),
-                                  ),
-                                  Text(
-                                    nextDetail,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      color: Color(0xFFEADFFF),
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
+                                    Positioned(
+                                      top: 9,
+                                      left: 10,
+                                      right: 10,
+                                      child: _SpeechBubble(roomMessage),
                                     ),
-                                  ),
-                                ],
+                                    Positioned(
+                                      bottom: 3,
+                                      child: PetAvatarWidget(
+                                        mood: state.finny.mood,
+                                        stage: state.finny.stage,
+                                        size: (room.maxHeight * .68).clamp(
+                                          82.0,
+                                          room.maxWidth - 70,
+                                        ),
+                                        hasRaincoat:
+                                            state.finny.activeOutfit ==
+                                                'raincoat' &&
+                                            state.inventory.hasItem('raincoat'),
+                                        onTap: pet,
+                                        onReact: onPetReact,
+                                        requestedReaction: requestedReaction,
+                                        reactionTravel: reactionTravel,
+                                        reactionToken: reactionToken,
+                                      ),
+                                    ),
+                                    if (onRoomItem != null &&
+                                        state.inventory.hasItem('cozy_bed'))
+                                      _RoomHotspot(
+                                        room: room,
+                                        x: 49,
+                                        y: 282,
+                                        label: 'Полежать на лежанке',
+                                        onTap: () => onRoomItem!('cozy_bed'),
+                                      ),
+                                    if (onRoomItem != null &&
+                                        state.inventory.hasItem('warm_lamp'))
+                                      _RoomHotspot(
+                                        room: room,
+                                        x: 273,
+                                        y: 218,
+                                        label: 'Включить лампу',
+                                        onTap: () => onRoomItem!('warm_lamp'),
+                                      ),
+                                    if (onRoomItem != null &&
+                                        state.inventory.hasItem('toy_ball'))
+                                      _RoomHotspot(
+                                        room: room,
+                                        x: 88,
+                                        y: 281,
+                                        label: 'Поиграть с мячом',
+                                        onTap: () => onRoomItem!('toy_ball'),
+                                      ),
+                                    if (onRoomItem != null &&
+                                        state.inventory.hasItem('toy_robot'))
+                                      _RoomHotspot(
+                                        room: room,
+                                        x: 244,
+                                        y: 260,
+                                        label: 'Поиграть с роботом',
+                                        onTap: () => onRoomItem!('toy_robot'),
+                                      ),
+                                    if (onRoomItem != null &&
+                                        state.inventory.hasItem('kite'))
+                                      _RoomHotspot(
+                                        room: room,
+                                        x: 295,
+                                        y: 95,
+                                        label: 'Посмотреть на воздушного змея',
+                                        onTap: () => onRoomItem!('kite'),
+                                      ),
+                                    Positioned(
+                                      left: 9,
+                                      bottom: 9,
+                                      child: IconButton.filledTonal(
+                                        tooltip: 'Одежда Финни',
+                                        onPressed: wardrobe,
+                                        style: IconButton.styleFrom(
+                                          minimumSize: const Size(46, 46),
+                                          backgroundColor: _cream,
+                                          foregroundColor: FinnyColors.primary,
+                                        ),
+                                        icon: const Icon(
+                                          Icons.checkroom_rounded,
+                                        ),
+                                      ),
+                                    ),
+                                    Positioned(
+                                      right: 9,
+                                      bottom: 9,
+                                      child: _WeatherChip(state.forecast.title),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
-                            const Icon(
-                              Icons.arrow_forward_rounded,
-                              color: Colors.white,
+                            BalanceStatsStrip(stats: state.balanceStats),
+                            Divider(
+                              height: 1,
+                              thickness: 1,
+                              color: FinnyColors.primary.withValues(alpha: .12),
+                            ),
+                            Expanded(
+                              child: LayoutBuilder(
+                                builder: (context, cardSpace) => FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  alignment: Alignment.topCenter,
+                                  child: SizedBox(
+                                    width: cardSpace.maxWidth,
+                                    child: BalanceDecisionCard(
+                                      state: state,
+                                      finish: finish,
+                                      plan: plan,
+                                    ),
+                                  ),
+                                ),
+                              ),
                             ),
                           ],
                         ),
                       ),
                     ),
-                  ),
-                ),
+                  );
+                },
               ),
-              const SizedBox(height: 6),
-              Material(
-                color: const Color(0xFFEEE1FF),
-                borderRadius: BorderRadius.circular(16),
-                child: InkWell(
-                  onTap: goal,
-                  borderRadius: BorderRadius.circular(16),
-                  child: SizedBox(
-                    height: 54,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.star_rounded,
-                            color: _purple,
-                            size: 24,
-                          ),
-                          const SizedBox(width: 9),
-                          Expanded(
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        goalOwned
-                                            ? 'Мечта получена: ${goalDef.name}'
-                                            : 'Мечта: ${goalDef.name}',
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          color: _ink,
-                                          fontSize: 13,
-                                          fontWeight: FontWeight.w800,
-                                        ),
-                                      ),
-                                    ),
-                                    Text(
-                                      goalOwned
-                                          ? '✓'
-                                          : '${state.goal.savedAmount}/${state.goal.targetAmount}',
-                                      style: const TextStyle(
-                                        color: _purple,
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w800,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 5),
-                                LinearProgressIndicator(
-                                  value: goalOwned
-                                      ? 1
-                                      : state.goal.progress.clamp(0, 1),
-                                  minHeight: 6,
-                                  color: _purple,
-                                  backgroundColor: Colors.white,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 7),
-              Row(
-                children: [
-                  _DockAction(
-                    Icons.eco_rounded,
-                    'Работа',
-                    work,
-                    const Color(0xFFDDF5E4),
-                    const Color(0xFF187B52),
-                  ),
-                  const SizedBox(width: 7),
-                  _DockAction(
-                    Icons.storefront_rounded,
-                    'Лавка',
-                    shop,
-                    const Color(0xFFFFE8D2),
-                    const Color(0xFF9D4A22),
-                  ),
-                  const SizedBox(width: 7),
-                  _DockAction(
-                    Icons.donut_small_rounded,
-                    'План',
-                    plan,
-                    const Color(0xFFE5D5FF),
-                    _purple,
-                  ),
-                  const SizedBox(width: 7),
-                  _DockAction(
-                    Icons.star_rounded,
-                    'Мечта',
-                    goal,
-                    const Color(0xFFFCE4F1),
-                    const Color(0xFFB73778),
-                  ),
-                ],
-              ),
-              SizedBox(
-                height: 48,
-                child: Center(
-                  child: TextButton.icon(
-                    onPressed: finish,
-                    icon: const Icon(Icons.bedtime_outlined, size: 17),
-                    label: const Text('Завершить день'),
-                    style: TextButton.styleFrom(
-                      foregroundColor: const Color(0xFF5A456E),
-                      minimumSize: const Size(48, 48),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
+            ),
+            _HomeNavigation(
+              state: state,
+              demoActive: demoActive,
+              goal: goal,
+              shop: shop,
+              task: task,
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-class _AmountPill extends StatelessWidget {
-  final IconData icon;
-  final int value;
-  final String meaning;
-  final Color color;
-  const _AmountPill(this.icon, this.value, this.meaning, this.color);
+class _HomeHeader extends StatelessWidget {
+  final GameState state;
+  final VoidCallback? rename, accent;
+  final VoidCallback guide, work, plan, task, adult, progress, demo;
+
+  const _HomeHeader({
+    required this.state,
+    required this.rename,
+    required this.guide,
+    required this.work,
+    required this.plan,
+    required this.task,
+    required this.adult,
+    required this.progress,
+    required this.demo,
+    required this.accent,
+  });
 
   @override
-  Widget build(BuildContext context) => Semantics(
-    label: '$meaning: $value',
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.fromLTRB(16, 3, 9, 6),
+    child: Column(
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: InkWell(
+                onTap: rename,
+                borderRadius: BorderRadius.circular(10),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Flexible(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          state.profile.petName,
+                          style: const TextStyle(
+                            color: _ink,
+                            fontSize: 23,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.edit_rounded,
+                      size: 15,
+                      color: FinnyColors.primary,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              decoration: BoxDecoration(
+                color: FinnyColors.surface,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: FinnyColors.borderLight),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'День ${state.day}',
+                    style: const TextStyle(
+                      color: FinnyColors.textPrimary,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  Text(
+                    switch (state.finny.stage) {
+                      DevelopmentStage.start => 'Новичок',
+                      DevelopmentStage.planner => 'Планировщик',
+                      DevelopmentStage.independent => 'Самостоятельный',
+                    },
+                    style: TextStyle(
+                      color: FinnyColors.primary,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            IconButton(
+              tooltip: 'Как играть',
+              onPressed: guide,
+              icon: Icon(
+                Icons.help_outline_rounded,
+                color: FinnyColors.primary,
+              ),
+            ),
+            PopupMenuButton<String>(
+              tooltip: 'Ещё',
+              icon: const Icon(Icons.more_horiz_rounded, color: _ink),
+              onSelected: (value) => switch (value) {
+                'progress' => progress(),
+                'work' => work(),
+                'tasks' => task(),
+                'adult' => adult(),
+                'demo' => demo(),
+                'accent' => accent?.call(),
+                'plan' => plan(),
+                _ => null,
+              },
+              itemBuilder: (_) => const [
+                PopupMenuItem(value: 'progress', child: Text('Дневник')),
+                PopupMenuItem(value: 'work', child: Text('Мини-игры')),
+                PopupMenuItem(value: 'plan', child: Text('План бюджета')),
+                PopupMenuItem(value: 'accent', child: Text('Цвет приложения')),
+                PopupMenuItem(value: 'adult', child: Text('Родителям')),
+                PopupMenuItem(value: 'demo', child: Text('Демо')),
+              ],
+            ),
+          ],
+        ),
+        const SizedBox(height: 3),
+        Row(
+          children: [
+            _MoneyStatus('🪙', '${state.balance}', 'на руках'),
+            const SizedBox(width: 8),
+            _MoneyStatus('🐷', '${state.savings}', 'в копилке'),
+          ],
+        ),
+      ],
+    ),
+  );
+}
+
+class _MoneyStatus extends StatelessWidget {
+  final String icon, amount, label;
+  const _MoneyStatus(this.icon, this.amount, this.label);
+
+  @override
+  Widget build(BuildContext context) => Expanded(
     child: Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(13),
+        color: _cream,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: FinnyColors.borderLight),
       ),
       child: Row(
         children: [
-          Icon(icon, size: 17, color: _ink),
-          const SizedBox(width: 4),
+          Text(icon, style: const TextStyle(fontSize: 16)),
+          const SizedBox(width: 5),
           Text(
-            '$value',
-            style: const TextStyle(
-              color: _ink,
-              fontSize: 14,
-              fontWeight: FontWeight.w900,
+            amount,
+            style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w900),
+          ),
+          const SizedBox(width: 4),
+          Flexible(
+            child: Text(
+              label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                fontSize: 11,
+                color: FinnyColors.textSecondary,
+              ),
             ),
           ),
         ],
@@ -592,116 +457,261 @@ class _AmountPill extends StatelessWidget {
   );
 }
 
-class _JourneyStep extends StatelessWidget {
-  final String label;
-  final int number;
-  final bool active;
-  final bool completed;
-
-  const _JourneyStep({
-    required this.label,
-    required this.number,
-    required this.active,
-    required this.completed,
-  });
+class _WeatherChip extends StatelessWidget {
+  final String forecast;
+  const _WeatherChip(this.forecast);
 
   @override
   Widget build(BuildContext context) {
-    final background = active
-        ? _purple
-        : completed
-        ? const Color(0xFFDDF5E4)
-        : const Color(0xFFF1E9DF);
-    final foreground = active
-        ? Colors.white
-        : completed
-        ? const Color(0xFF165E42)
-        : const Color(0xFF665D70);
-    return Semantics(
-      label:
-          '$number. $label: ${completed
-              ? 'готово'
-              : active
-              ? 'сейчас'
-              : 'впереди'}',
-      child: Container(
-        height: 32,
-        decoration: BoxDecoration(
-          color: background,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              completed ? Icons.check_rounded : Icons.circle,
-              size: completed ? 15 : 8,
-              color: foreground,
+    final rain = RegExp('дожд|ливень').hasMatch(forecast.toLowerCase());
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration: BoxDecoration(
+        color: _cream.withValues(alpha: .94),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            rain ? Icons.umbrella_rounded : Icons.wb_sunny_rounded,
+            size: 16,
+            color: const Color(0xFF9D7048),
+          ),
+          const SizedBox(width: 5),
+          Text(
+            forecast,
+            style: const TextStyle(
+              fontSize: 12,
+              color: _ink,
+              fontWeight: FontWeight.w800,
             ),
-            const SizedBox(width: 4),
-            Flexible(
-              child: Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: foreground,
-                  fontSize: 11,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 }
 
-class _DockAction extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final VoidCallback action;
-  final Color background;
-  final Color foreground;
-  const _DockAction(
-    this.icon,
-    this.label,
-    this.action,
-    this.background,
-    this.foreground,
+class _SpeechBubble extends StatelessWidget {
+  final String message;
+  const _SpeechBubble(this.message);
+
+  @override
+  Widget build(BuildContext context) => Column(
+    mainAxisSize: MainAxisSize.min,
+    children: [
+      Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 8),
+        decoration: BoxDecoration(
+          color: _cream.withValues(alpha: .97),
+          borderRadius: BorderRadius.circular(19),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x22000000),
+              blurRadius: 5,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Text(
+          message,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontSize: 12,
+            height: 1.18,
+            fontWeight: FontWeight.w800,
+            color: _ink,
+          ),
+        ),
+      ),
+      Transform.rotate(
+        angle: .785398,
+        child: Container(width: 10, height: 10, color: _cream),
+      ),
+    ],
   );
+}
+
+class _HomeNavigation extends StatelessWidget {
+  final GameState state;
+  final bool demoActive;
+  final VoidCallback goal, shop, task;
+  const _HomeNavigation({
+    required this.state,
+    required this.demoActive,
+    required this.goal,
+    required this.shop,
+    required this.task,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final availableTasks = kFinancialTasks
+        .where(
+          (item) =>
+              (demoActive || item.day <= state.day) &&
+              !state.completedTasks.any((done) => done.taskId == item.id),
+        )
+        .toList();
+    final currentGoal = kAvailableGoals.firstWhere(
+      (goal) => goal.id == state.goal.goalId,
+      orElse: () => kAvailableGoals.first,
+    );
+    final goalLabel = switch (currentGoal.id) {
+      'rocket' => 'Ракета',
+      'treehouse' => 'Домик',
+      'skate' => 'Скейт',
+      _ => currentGoal.name,
+    };
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 8, 14, 6),
+      decoration: const BoxDecoration(
+        color: FinnyColors.surface,
+        border: Border(top: BorderSide(color: FinnyColors.border)),
+      ),
+      child: Row(
+        children: [
+          _NavButton(
+            Icons.school_rounded,
+            'Задания',
+            availableTasks.isEmpty ? 'Все решены' : availableTasks.first.title,
+            task,
+          ),
+          const SizedBox(width: 8),
+          _NavButton(
+            Icons.storefront_rounded,
+            'Лавка',
+            'Еда: ${state.inventory.foodReserveDays}',
+            shop,
+          ),
+          const SizedBox(width: 8),
+          _NavButton(
+            Icons.star_rounded,
+            'Мечта',
+            '$goalLabel · ${state.savings}/${state.goal.targetAmount}',
+            goal,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _NavButton extends StatelessWidget {
+  final IconData icon;
+  final String label, subtitle;
+  final VoidCallback action;
+  const _NavButton(this.icon, this.label, this.subtitle, this.action);
 
   @override
   Widget build(BuildContext context) => Expanded(
-    child: InkWell(
-      onTap: action,
+    child: Material(
+      color: FinnyColors.surfaceMuted,
       borderRadius: BorderRadius.circular(14),
-      child: SizedBox(
-        height: 65,
-        child: Column(
-          children: [
-            Container(
-              height: 42,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: background,
-                borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: action,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          constraints: const BoxConstraints(minHeight: 64),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: FinnyColors.borderLight),
+          ),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(icon, size: 18, color: FinnyColors.primary),
+                  const SizedBox(width: 3),
+                  Flexible(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        label,
+                        style: const TextStyle(
+                          color: _ink,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              child: Icon(icon, size: 24, color: foreground),
-            ),
-            const SizedBox(height: 2),
-            Text(
-              label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: _ink,
-                fontSize: 13,
-                fontWeight: FontWeight.w800,
+              const SizedBox(height: 3),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 5),
+                child: Text(
+                  subtitle,
+                  maxLines: 2,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 10.5,
+                    color: FinnyColors.textSecondary,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+class _RoomHotspot extends StatelessWidget {
+  final BoxConstraints room;
+  final double x, y;
+  final String label;
+  final VoidCallback onTap;
+
+  const _RoomHotspot({
+    required this.room,
+    required this.x,
+    required this.y,
+    required this.label,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) => Positioned(
+    left: (room.maxWidth * x / 360 - 24).clamp(0.0, room.maxWidth - 48),
+    top: (room.maxHeight * y / 360 - 24).clamp(0.0, room.maxHeight - 48),
+    child: Semantics(
+      button: true,
+      label: label,
+      child: Tooltip(
+        message: label,
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(24),
+            child: SizedBox(
+              width: 48,
+              height: 48,
+              child: Align(
+                alignment: Alignment.topRight,
+                child: Container(
+                  width: 19,
+                  height: 19,
+                  decoration: const BoxDecoration(
+                    color: _cream,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.touch_app_rounded,
+                    size: 13,
+                    color: FinnyColors.primary,
+                  ),
+                ),
               ),
             ),
-          ],
+          ),
         ),
       ),
     ),

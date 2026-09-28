@@ -4,9 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/finny_tokens.dart';
+import '../../data/models/game_state.dart';
 import '../../game/engine/game_engine.dart';
 
-/// A fixed-size evening review that shows what changed and why on one page.
+/// The evening reflects choices and Finny's condition in one short glance.
 class CompactEveningSummary extends ConsumerWidget {
   const CompactEveningSummary({super.key});
 
@@ -14,205 +15,188 @@ class CompactEveningSummary extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(gameEngineProvider);
     final summary = state.history.isNotEmpty ? state.history.last : null;
-    final lastDay = state.day >= 10;
+    final tenDayMilestone = state.phase == GamePhase.finalSummary;
+    final stats = state.balanceStats;
+
     return Dialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 17, vertical: 16),
+      backgroundColor: const Color(0xFFFFFCF6),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-      backgroundColor: Colors.white,
-      child: SizedBox(
-        width: 560,
-        height: math.min(560, MediaQuery.sizeOf(context).height - 54),
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(17, 15, 17, 16),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: 540,
+          maxHeight: math.min(680, MediaQuery.sizeOf(context).height - 32),
+        ),
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(18),
           child: Column(
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Row(
-                children: [
-                  const Icon(
-                    Icons.nights_stay_rounded,
-                    color: FinnyColors.primary,
-                    size: 25,
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      lastDay
-                          ? 'Десять дней с Финни'
-                          : 'Вечер · день ${state.day}',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w900,
-                        color: FinnyColors.textPrimary,
-                      ),
-                    ),
-                  ),
-                ],
+              const Text('🌙', style: TextStyle(fontSize: 42)),
+              const SizedBox(height: 4),
+              Text(
+                tenDayMilestone
+                    ? 'Десять дней с Финни'
+                    : 'Вечер · день ${state.day}',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w900,
+                ),
               ),
               const SizedBox(height: 5),
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Посмотрим, как решения изменили день.',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: FinnyColors.textSecondary,
+              Text(
+                tenDayMilestone
+                    ? 'Первые десять дней позади. Завтра ждёт новый день!'
+                    : summary?.balancedDay == true
+                    ? 'Сегодня Финни удалось сохранить баланс!'
+                    : 'Завтра можно выбрать другой путь.',
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 13),
+              ),
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  _StateTile(
+                    '🍽️',
+                    'Сытость',
+                    stats.satiety,
+                    stats.satiety <= 2
+                        ? 'Нужна еда'
+                        : stats.satiety < 4
+                        ? 'Нормально'
+                        : 'Сыт',
                   ),
-                ),
+                  const SizedBox(width: 6),
+                  _StateTile(
+                    '⚡',
+                    'Силы',
+                    stats.energy,
+                    stats.energy <= 1
+                        ? 'Нужен отдых'
+                        : stats.energy < 4
+                        ? 'Нормально'
+                        : 'Бодр',
+                  ),
+                  const SizedBox(width: 6),
+                  _StateTile(
+                    '💚',
+                    'Здоровье',
+                    stats.wellbeing,
+                    stats.wellbeing <= 1
+                        ? 'Нужна забота'
+                        : stats.wellbeing < 4
+                        ? 'Нормально'
+                        : 'Хорошо',
+                  ),
+                ],
               ),
               const SizedBox(height: 12),
               Row(
                 children: [
-                  _Metric(
+                  _CoinTile(
                     'Получено',
-                    _signed(summary?.income ?? state.dayEarned),
-                    background: FinnyColors.successLight,
-                    foreground: FinnyColors.success,
-                    icon: Icons.trending_up_rounded,
-                    semanticLabel:
-                        'За день получено ${summary?.income ?? state.dayEarned} монет',
+                    summary?.income ?? state.dayEarned,
+                    '+',
                   ),
                   const SizedBox(width: 6),
-                  _Metric(
-                    'Потрачено',
-                    _signed(summary?.spent ?? state.daySpent, outgoing: true),
-                    background: const Color(0xFFFFE7E8),
-                    foreground: const Color(0xFFAD3B4C),
-                    icon: Icons.trending_down_rounded,
-                    semanticLabel:
-                        'За день потрачено ${summary?.spent ?? state.daySpent} монет',
-                  ),
+                  _CoinTile('Потрачено', summary?.spent ?? state.daySpent, '−'),
                   const SizedBox(width: 6),
-                  _Metric(
-                    'В копилку',
-                    _signed(summary?.saved ?? state.daySaved),
-                    background: FinnyColors.primaryLight,
-                    foreground: FinnyColors.primaryDark,
-                    icon: Icons.savings_rounded,
-                    semanticLabel:
-                        'Переложено в копилку ${summary?.saved ?? state.daySaved} монет',
-                  ),
+                  _CoinTile('В копилку', summary?.saved ?? state.daySaved, '+'),
                 ],
               ),
-              const SizedBox(height: 11),
-              Expanded(
-                child: Container(
+              if (summary != null && summary.plannedNeeds != null) ...[
+                const SizedBox(height: 12),
+                Container(
                   width: double.infinity,
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF7F4FA),
+                    color: Colors.white,
                     borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: FinnyColors.borderLight),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        'План и результат',
+                        'План и что получилось',
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w900,
-                          color: FinnyColors.textPrimary,
                         ),
                       ),
+                      const SizedBox(height: 7),
+                      _PlanRow(
+                        '🍽️ Еда',
+                        summary.plannedNeeds!,
+                        summary.actualNeeds,
+                      ),
+                      _PlanRow(
+                        '🎈 Радости',
+                        summary.plannedWants!,
+                        summary.actualWants,
+                      ),
+                      _PlanRow(
+                        '🐷 Мечта',
+                        summary.plannedSavings!,
+                        summary.saved,
+                      ),
+                      _PlanRow(
+                        '🛟 Запас',
+                        summary.plannedReserve!,
+                        summary.actualReserve,
+                      ),
+                      if (summary.actualReserveSpent > 0)
+                        Text(
+                          'На неожиданности ушло ${summary.actualReserveSpent} 🪙.',
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: FinnyColors.textSecondary,
+                          ),
+                        ),
                       const SizedBox(height: 6),
-                      if (summary?.plannedNeeds == null)
-                        const Expanded(
-                          child: Center(
-                            child: Text(
-                              'Сегодня плана не было. Завтра попробуй заранее распределить монеты.',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: FinnyColors.textSecondary,
-                              ),
-                            ),
-                          ),
-                        )
-                      else ...[
-                        _Comparison(
-                          'Нужно',
-                          summary!.plannedNeeds!,
-                          summary.actualNeeds,
+                      Text(
+                        summary.planFeedback,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          color: summary.followedPlan
+                              ? FinnyColors.success
+                              : FinnyColors.warning,
                         ),
-                        _Comparison(
-                          'Радости',
-                          summary.plannedWants!,
-                          summary.actualWants,
-                        ),
-                        if (summary.reserveIsCash)
-                          _CashReserveComparison(
-                            planned: summary.plannedReserve!,
-                            remaining: summary.actualReserve,
-                            used: summary.actualReserveSpent,
-                          )
-                        else
-                          _Comparison(
-                            'Запас',
-                            summary.plannedReserve!,
-                            summary.actualReserve,
-                          ),
-                        _Comparison(
-                          'Мечта',
-                          summary.plannedSavings!,
-                          summary.saved,
-                        ),
-                      ],
+                      ),
                     ],
                   ),
                 ),
-              ),
-              const SizedBox(height: 10),
+              ],
+              const SizedBox(height: 13),
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 11,
-                  vertical: 9,
-                ),
+                padding: const EdgeInsets.all(13),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFE8F0E2),
-                  borderRadius: BorderRadius.circular(15),
+                  color: FinnyColors.primaryLight,
+                  borderRadius: BorderRadius.circular(16),
                 ),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.lightbulb_rounded,
-                      color: Color(0xFF5B815C),
-                      size: 21,
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        summary?.reflection ?? 'Завтра будет новый шанс применить то, что узнал сегодня.',
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 12,
-                          height: 1.2,
-                          color: FinnyColors.textPrimary,
-                        ),
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  summary?.reflection ?? 'Финни ждёт нового дня.',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                  ),
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 13),
               SizedBox(
                 width: double.infinity,
                 height: 52,
                 child: FilledButton(
-                  onPressed: lastDay
-                      ? () => Navigator.pop(context)
-                      : () {
-                          ref
-                              .read(gameEngineProvider.notifier)
-                              .advanceToNextDay();
-                          Navigator.pop(context);
-                        },
+                  onPressed: () {
+                    ref.read(gameEngineProvider.notifier).advanceToNextDay();
+                    Navigator.pop(context);
+                  },
                   child: Text(
-                    lastDay
-                        ? 'Вернуться в домик'
-                        : 'Начать день ${state.day + 1}',
+                    'Начать день ${state.day + 1}',
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w900,
@@ -228,150 +212,110 @@ class CompactEveningSummary extends ConsumerWidget {
   }
 }
 
-class _Metric extends StatelessWidget {
-  final String label, amount;
-  final Color background, foreground;
-  final IconData icon;
-  final String semanticLabel;
-  const _Metric(
-    this.label,
-    this.amount, {
-    required this.background,
-    required this.foreground,
-    required this.icon,
-    required this.semanticLabel,
-  });
-  @override
-  Widget build(BuildContext context) {
-    final amountColor = amount == '0' ? FinnyColors.textSecondary : foreground;
-    return Expanded(
-      child: Semantics(
-        label: semanticLabel,
-        excludeSemantics: true,
-        child: Container(
-          height: 66,
-          padding: const EdgeInsets.symmetric(horizontal: 5),
-          decoration: BoxDecoration(
-            color: background,
-            border: Border.all(color: foreground.withValues(alpha: 0.2)),
-            borderRadius: BorderRadius.circular(13),
-          ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
-                  color: foreground,
-                ),
-              ),
-              const SizedBox(height: 3),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(icon, size: 15, color: amountColor),
-                  const SizedBox(width: 3),
-                  Text(
-                    amount,
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w900,
-                      color: amountColor,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-String _signed(int amount, {bool outgoing = false}) =>
-    amount == 0 ? '0' : '${outgoing ? '-' : '+'}$amount';
-
-class _Comparison extends StatelessWidget {
+class _PlanRow extends StatelessWidget {
   final String label;
   final int planned, actual;
-  const _Comparison(this.label, this.planned, this.actual);
+  const _PlanRow(this.label, this.planned, this.actual);
+
   @override
-  Widget build(BuildContext context) => SizedBox(
-    height: 29,
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(bottom: 4),
     child: Row(
       children: [
-        Expanded(
-          child: Text(
-            label,
-            style: const TextStyle(
-              fontSize: 13,
-              color: FinnyColors.textPrimary,
-            ),
+        Expanded(child: Text(label, style: const TextStyle(fontSize: 12))),
+        Text(
+          'план $planned 🪙',
+          style: const TextStyle(
+            fontSize: 12,
+            color: FinnyColors.textSecondary,
           ),
         ),
+        const SizedBox(width: 10),
         Text(
-          'план $planned · факт $actual',
-          style: const TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w800,
-            color: FinnyColors.primary,
-          ),
+          'факт $actual 🪙',
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w800),
         ),
       ],
     ),
   );
 }
 
-class _CashReserveComparison extends StatelessWidget {
-  final int planned, remaining, used;
-  const _CashReserveComparison({
-    required this.planned,
-    required this.remaining,
-    required this.used,
-  });
+class _StateTile extends StatelessWidget {
+  final String icon, label, status;
+  final double value;
+  const _StateTile(this.icon, this.label, this.value, this.status);
 
   @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 4),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            const Expanded(
-              child: Text(
-                'Денежный запас',
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w800,
-                  color: FinnyColors.textPrimary,
-                ),
-              ),
-            ),
-            Text(
-              'план $planned',
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w800,
-                color: FinnyColors.primary,
-              ),
-            ),
-          ],
-        ),
-        Text(
-          'Осталось $remaining · использовано $used',
-          style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w700,
-            color: FinnyColors.textSecondary,
+  Widget build(BuildContext context) => Expanded(
+    child: Container(
+      padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 4),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(13),
+      ),
+      child: Column(
+        children: [
+          Text(icon, style: const TextStyle(fontSize: 23)),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
           ),
-        ),
-      ],
+          const SizedBox(height: 5),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: LinearProgressIndicator(
+              value: value / 5,
+              minHeight: 6,
+              backgroundColor: FinnyColors.borderLight,
+              color: value <= 1 ? FinnyColors.warning : FinnyColors.primary,
+            ),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            status,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 15,
+              color: value <= 1 ? FinnyColors.warning : FinnyColors.primary,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+class _CoinTile extends StatelessWidget {
+  final String label, sign;
+  final int value;
+  const _CoinTile(this.label, this.value, this.sign);
+
+  @override
+  Widget build(BuildContext context) => Expanded(
+    child: Container(
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 3),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFEDCE),
+        borderRadius: BorderRadius.circular(13),
+      ),
+      child: Column(
+        children: [
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800),
+          ),
+          Text(
+            '$sign$value 🪙',
+            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
+          ),
+        ],
+      ),
     ),
   );
 }

@@ -36,7 +36,7 @@ class DemoDrawer extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Text(
-                'Откроется чистый демонстрационный профиль. В нём можно переходить по дням и добавлять монеты. Вернуться к своей игре можно здесь же.',
+                'Попробуй игру отдельно от своего прогресса. Вернуться можно в этой же панели.',
                 style: TextStyle(
                   fontFamily: 'Nunito',
                   fontSize: 15,
@@ -93,9 +93,15 @@ class DemoDrawer extends ConsumerWidget {
             ),
             const Gap(20),
 
+            const Text(
+              'Обычная игра и демо используют одинаковые цены и награды. '
+              'Ниже можно начать отдельную сцену нужного дня; текущий демо-прогресс при этом сбросится.',
+              style: TextStyle(fontSize: 13, height: 1.35),
+            ),
+            const Gap(16),
             // Дни
             Text(
-              'Переход к дню:',
+              'Отдельная сцена дня:',
               style: TextStyle(
                 fontFamily: 'Nunito',
                 fontSize: 14,
@@ -137,47 +143,6 @@ class DemoDrawer extends ConsumerWidget {
                   },
                 );
               }),
-            ),
-            const Gap(20),
-
-            // Баланс
-            Text(
-              'Управление балансом:',
-              style: TextStyle(
-                fontFamily: 'Nunito',
-                fontSize: 14,
-                fontWeight: FontWeight.w800,
-                color: FinnyColors.textPrimary,
-              ),
-            ),
-            const Gap(8),
-            Row(
-              children: [
-                Expanded(
-                  child: FinnyButton.secondary(
-                    label: '+50 монет',
-                    onPressed: () =>
-                        ref.read(gameEngineProvider.notifier).addCoins(50),
-                  ),
-                ),
-                const Gap(8),
-                Expanded(
-                  child: FinnyButton.secondary(
-                    label: '+100 монет',
-                    onPressed: () =>
-                        ref.read(gameEngineProvider.notifier).addCoins(100),
-                  ),
-                ),
-                const Gap(8),
-                Expanded(
-                  child: FinnyButton.secondary(
-                    label: 'Еда',
-                    onPressed: () => ref
-                        .read(gameEngineProvider.notifier)
-                        .triggerEmergencyAid(),
-                  ),
-                ),
-              ],
             ),
             const Gap(20),
 

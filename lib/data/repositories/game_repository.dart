@@ -1,6 +1,10 @@
 import 'dart:convert';
+
 import 'package:shared_preferences/shared_preferences.dart';
+
 import '../models/game_state.dart';
+import '../../game/content/days.dart';
+import '../../game/content/goals.dart';
 
 class GameRepository {
   static const String _kGameStateKey = 'finny_game_state_v1';
@@ -37,7 +41,33 @@ class GameRepository {
       final jsonString = _prefs.getString(_activeStateKey);
       if (jsonString != null && jsonString.isNotEmpty) {
         final jsonMap = jsonDecode(jsonString) as Map<String, dynamic>;
-        return GameState.fromJson(jsonMap);
+        final loaded = GameState.fromJson(jsonMap);
+        final currentGoal = kAvailableGoals.firstWhere(
+          (goal) => goal.id == loaded.goal.goalId,
+          orElse: () => kAvailableGoals.first,
+        );
+        // Earlier versions stored the old price with each profile. Keep every
+        // earned coin and acquired reward, but use the current price for the
+        // active goal so the balance and goal screen agree after an update.
+        final oldDayTenForecast =
+            loaded.day == 10 && loaded.forecast.title == 'Торжественный день';
+        if (loaded.goal.targetAmount != currentGoal.targetCost ||
+            loaded.goal.savedAmount != loaded.savings ||
+            oldDayTenForecast) {
+          final migrated = loaded.copyWith(
+            goal: loaded.goal.copyWith(
+              targetAmount: currentGoal.targetCost,
+              savedAmount: loaded.savings,
+              isCompleted: loaded.savings >= currentGoal.targetCost,
+            ),
+            forecast: oldDayTenForecast
+                ? dayConfigFor(10).forecast
+                : loaded.forecast,
+          );
+          saveGameState(migrated);
+          return migrated;
+        }
+        return loaded;
       }
     } catch (e) {
       // Fallback to initial state on corruption

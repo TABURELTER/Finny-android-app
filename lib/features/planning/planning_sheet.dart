@@ -5,7 +5,6 @@ import '../../core/theme/finny_tokens.dart';
 import '../../core/theme/finny_widgets.dart';
 import '../../data/models/game_state.dart';
 import '../../game/engine/game_engine.dart';
-import '../work/work_screen.dart';
 
 // The envelopes are a plan, not separate balances. These colors are repeated
 // in the allocation bar and the result so a child can follow each choice.
@@ -21,15 +20,13 @@ const _walletColor = Color(0xFF805400);
 const _walletLight = Color(0xFFFFEDAE);
 
 class PlanningSheet extends ConsumerStatefulWidget {
-  const PlanningSheet({super.key, this.homeContext});
-
-  final BuildContext? homeContext;
+  const PlanningSheet({super.key});
 
   static Future<void> show(BuildContext context) => showModalBottomSheet(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
-    builder: (_) => PlanningSheet(homeContext: context),
+    builder: (_) => const PlanningSheet(),
   );
 
   @override
@@ -72,10 +69,16 @@ class _PlanningSheetState extends ConsumerState<PlanningSheet> {
     bool notify = true,
   }) {
     void assign() {
-      _needs = (_balance * needs ~/ 5) * 5;
-      _wants = (_balance * wants ~/ 5) * 5;
-      _reserve = (_balance * reserve ~/ 5) * 5;
-      _savings = (_balance * savings ~/ 5) * 5;
+      // Keep a real meal affordable in the suggested plan, including day one.
+      _needs = _balance >= 7
+          ? (_balance * needs).round().clamp(7, _balance)
+          : _balance;
+      var remaining = _balance - _needs;
+      _wants = (_balance * wants).round().clamp(0, remaining);
+      remaining -= _wants;
+      _reserve = (_balance * reserve).round().clamp(0, remaining);
+      remaining -= _reserve;
+      _savings = (_balance * savings).round().clamp(0, remaining);
       _presetName = name;
     }
 
@@ -125,14 +128,6 @@ class _PlanningSheetState extends ConsumerState<PlanningSheet> {
     if (saved) setState(() => _justConfirmed = true);
   }
 
-  void _openWork() {
-    final homeContext = widget.homeContext;
-    Navigator.of(context).pop();
-    if (homeContext != null && homeContext.mounted) {
-      WorkScreen.open(homeContext);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(gameEngineProvider);
@@ -144,7 +139,7 @@ class _PlanningSheetState extends ConsumerState<PlanningSheet> {
     return FinnyBottomSheet(
       heightFactor: .94,
       title: 'Бюджет на день',
-      subtitle: 'Разложи $_balance монет по четырём конвертам',
+      subtitle: 'Выбери готовую идею или поправь суммы',
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 7, 16, 10),
         child: Column(
@@ -261,7 +256,7 @@ class _PlanningSheetState extends ConsumerState<PlanningSheet> {
                   ),
                 ),
                 Text(
-                  '$_free монет',
+                  '$_free 🪙',
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w900,
@@ -292,7 +287,6 @@ class _PlanningSheetState extends ConsumerState<PlanningSheet> {
   }
 
   Widget _confirmedView(GameState state, BudgetPlan plan) {
-    final workPending = !state.workCompletedToday;
     return FinnyBottomSheet(
       heightFactor: .79,
       title: _justConfirmed ? 'План готов!' : 'План на сегодня',
@@ -336,7 +330,7 @@ class _PlanningSheetState extends ConsumerState<PlanningSheet> {
                           ),
                         ),
                         Text(
-                          'Было ${state.balance}, осталось ${state.balance} монет',
+                          'Было ${state.balance}, осталось ${state.balance} 🪙',
                           style: const TextStyle(
                             color: _walletColor,
                             fontSize: 13,
@@ -401,7 +395,7 @@ class _PlanningSheetState extends ConsumerState<PlanningSheet> {
             Align(
               alignment: Alignment.centerLeft,
               child: Text(
-                'Свободно: ${plan.leftover} монет',
+                'Свободно: ${plan.leftover} 🪙',
                 style: const TextStyle(
                   fontSize: 13,
                   color: _walletColor,
@@ -410,12 +404,10 @@ class _PlanningSheetState extends ConsumerState<PlanningSheet> {
               ),
             ),
             const Spacer(),
-            Text(
-              workPending
-                  ? 'Следующий шаг: помоги Финни заработать ещё 10 монет. Потом решишь, что купить и сколько отложить.'
-                  : 'Теперь покупку в лавке и взнос в копилку делай отдельно — тогда монеты действительно переместятся.',
+            const Text(
+              'Теперь выбери карточку и сверяйся с планом. Еда, работа и копилка доступны отдельно.',
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 13,
                 height: 1.2,
                 color: FinnyColors.textPrimary,
@@ -427,32 +419,17 @@ class _PlanningSheetState extends ConsumerState<PlanningSheet> {
               width: double.infinity,
               height: 52,
               child: FilledButton.icon(
-                onPressed: workPending && widget.homeContext != null
-                    ? _openWork
-                    : () => Navigator.pop(context),
-                icon: Icon(
-                  workPending && widget.homeContext != null
-                      ? Icons.handyman_rounded
-                      : Icons.home_rounded,
-                ),
-                label: Text(
-                  workPending && widget.homeContext != null
-                      ? 'К работе · +10 монет'
-                      : 'К Финни',
-                  style: const TextStyle(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.home_rounded),
+                label: const Text(
+                  'К Финни',
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
               ),
             ),
-            if (workPending && widget.homeContext != null) ...[
-              const SizedBox(height: 3),
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text('Сначала вернуться к Финни'),
-              ),
-            ],
           ],
         ),
       ),
@@ -482,7 +459,7 @@ class _WalletNote extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '$balance монет в кошельке',
+                '$balance 🪙 в кошельке',
                 style: const TextStyle(
                   color: _walletColor,
                   fontSize: 15,
@@ -532,7 +509,7 @@ class _Preset extends StatelessWidget {
             fontWeight: FontWeight.w900,
           ),
         ),
-        child: Text(title, maxLines: 1, overflow: TextOverflow.ellipsis),
+        child: FittedBox(fit: BoxFit.scaleDown, child: Text(title)),
       ),
     ),
   );
@@ -573,14 +550,16 @@ class _JarRow extends StatelessWidget {
         Icon(icon, size: 22, color: color),
         const SizedBox(width: 5),
         Expanded(
-          child: Text(
-            title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: color,
-              fontSize: 13,
-              fontWeight: FontWeight.w900,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              title,
+              style: TextStyle(
+                color: color,
+                fontSize: 13,
+                fontWeight: FontWeight.w900,
+              ),
             ),
           ),
         ),
@@ -592,14 +571,18 @@ class _JarRow extends StatelessWidget {
           icon: Icon(Icons.remove_circle_rounded, size: 27, color: color),
         ),
         SizedBox(
-          width: 25,
-          child: Text(
-            '$value',
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              color: color,
-              fontSize: 16,
-              fontWeight: FontWeight.w900,
+          width: 48,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              '$value',
+              maxLines: 1,
+              softWrap: false,
+              style: TextStyle(
+                color: color,
+                fontSize: 16,
+                fontWeight: FontWeight.w900,
+              ),
             ),
           ),
         ),
@@ -735,14 +718,16 @@ class _SavedTile extends StatelessWidget {
         Icon(icon, size: 20, color: color),
         const SizedBox(width: 5),
         Expanded(
-          child: Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              color: color,
-              fontSize: 12,
-              fontWeight: FontWeight.w900,
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              label,
+              style: TextStyle(
+                color: color,
+                fontSize: 12,
+                fontWeight: FontWeight.w900,
+              ),
             ),
           ),
         ),

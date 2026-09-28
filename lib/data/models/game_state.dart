@@ -17,7 +17,7 @@ enum GamePhase {
   dayAction, // Свободные действия (дом, работа, магазин, цель)
   eventResolution, // Событие дня
   eveningSummary, // Вечерняя сводка перед сном
-  finalSummary, // Финал 10-го дня
+  finalSummary, // Итог первых десяти дней, затем игра продолжается
 }
 
 class InventoryState {
@@ -248,6 +248,59 @@ class PlayerProfile {
   );
 }
 
+/// Small, child-readable ranges; older saves start with a safe neutral state.
+class FinnyBalance {
+  final double satiety;
+  final double energy;
+  final double wellbeing;
+  final int cardsToday;
+  final String lastMeal;
+  final int repeatMeals;
+
+  const FinnyBalance({
+    this.satiety = 3.0,
+    this.energy = 3.0,
+    this.wellbeing = 4.0,
+    this.cardsToday = 0,
+    this.lastMeal = '',
+    this.repeatMeals = 0,
+  });
+
+  FinnyBalance change({
+    double satiety = 0,
+    double energy = 0,
+    double wellbeing = 0,
+    int? cardsToday,
+    String? lastMeal,
+    int? repeatMeals,
+  }) => FinnyBalance(
+    satiety: (this.satiety + satiety).clamp(0.0, 5.0),
+    energy: (this.energy + energy).clamp(0.0, 5.0),
+    wellbeing: (this.wellbeing + wellbeing).clamp(0.0, 5.0),
+    cardsToday: cardsToday ?? this.cardsToday,
+    lastMeal: lastMeal ?? this.lastMeal,
+    repeatMeals: repeatMeals ?? this.repeatMeals,
+  );
+
+  Map<String, dynamic> toJson() => {
+    'satiety': satiety,
+    'energy': energy,
+    'wellbeing': wellbeing,
+    'cardsToday': cardsToday,
+    'lastMeal': lastMeal,
+    'repeatMeals': repeatMeals,
+  };
+
+  factory FinnyBalance.fromJson(Map<String, dynamic> json) => FinnyBalance(
+    satiety: ((json['satiety'] as num?)?.toDouble() ?? 3.0).clamp(0.0, 5.0),
+    energy: ((json['energy'] as num?)?.toDouble() ?? 3.0).clamp(0.0, 5.0),
+    wellbeing: ((json['wellbeing'] as num?)?.toDouble() ?? 4.0).clamp(0.0, 5.0),
+    cardsToday: (json['cardsToday'] as int? ?? 0).clamp(0, 4),
+    lastMeal: json['lastMeal'] as String? ?? '',
+    repeatMeals: json['repeatMeals'] as int? ?? 0,
+  );
+}
+
 class GameState {
   final int day;
   final int balance;
@@ -262,12 +315,14 @@ class GameState {
   final GamePhase phase;
   final BudgetPlan? plannedBudget;
   final bool workCompletedToday;
+  final bool roomActivityUsedToday;
   final ForecastInfo forecast;
   final GameSettings settings;
   final PlayerProfile profile;
   final int dayEarned;
   final int daySpent;
   final int daySaved;
+  final FinnyBalance balanceStats;
 
   const GameState({
     required this.day,
@@ -283,23 +338,25 @@ class GameState {
     required this.phase,
     this.plannedBudget,
     required this.workCompletedToday,
+    this.roomActivityUsedToday = false,
     required this.forecast,
     required this.settings,
     required this.profile,
     this.dayEarned = 0,
     this.daySpent = 0,
     this.daySaved = 0,
+    this.balanceStats = const FinnyBalance(),
   });
 
   factory GameState.initial() {
     return GameState(
       day: 1,
-      balance: 50, // Стартовый баланс Дня 1 (+50 🪙 доход)
+      balance: 20,
       savings: 0,
       goal: const GoalState(
         goalId: 'rocket',
         savedAmount: 0,
-        targetAmount: 100,
+        targetAmount: 125,
       ),
       inventory: const InventoryState(
         foodReserveDays: 1, // 1 день еды на руках
@@ -325,7 +382,7 @@ class GameState {
       ),
       settings: const GameSettings(),
       profile: PlayerProfile(petName: 'Финни', startDate: DateTime.now()),
-      dayEarned: 50,
+      dayEarned: 20,
       daySpent: 0,
       daySaved: 0,
     );
@@ -345,12 +402,14 @@ class GameState {
     GamePhase? phase,
     Object? plannedBudget = _keepPlannedBudget,
     bool? workCompletedToday,
+    bool? roomActivityUsedToday,
     ForecastInfo? forecast,
     GameSettings? settings,
     PlayerProfile? profile,
     int? dayEarned,
     int? daySpent,
     int? daySaved,
+    FinnyBalance? balanceStats,
   }) {
     return GameState(
       day: day ?? this.day,
@@ -368,12 +427,15 @@ class GameState {
           ? this.plannedBudget
           : plannedBudget as BudgetPlan?,
       workCompletedToday: workCompletedToday ?? this.workCompletedToday,
+      roomActivityUsedToday:
+          roomActivityUsedToday ?? this.roomActivityUsedToday,
       forecast: forecast ?? this.forecast,
       settings: settings ?? this.settings,
       profile: profile ?? this.profile,
       dayEarned: dayEarned ?? this.dayEarned,
       daySpent: daySpent ?? this.daySpent,
       daySaved: daySaved ?? this.daySaved,
+      balanceStats: balanceStats ?? this.balanceStats,
     );
   }
 
@@ -391,21 +453,23 @@ class GameState {
     'phase': phase.name,
     'plannedBudget': plannedBudget?.toJson(),
     'workCompletedToday': workCompletedToday,
+    'roomActivityUsedToday': roomActivityUsedToday,
     'forecast': forecast.toJson(),
     'settings': settings.toJson(),
     'profile': profile.toJson(),
     'dayEarned': dayEarned,
     'daySpent': daySpent,
     'daySaved': daySaved,
+    'balanceStats': balanceStats.toJson(),
   };
 
   factory GameState.fromJson(Map<String, dynamic> json) => GameState(
     day: json['day'] as int? ?? 1,
-    balance: json['balance'] as int? ?? 50,
+    balance: json['balance'] as int? ?? 20,
     savings: json['savings'] as int? ?? 0,
     goal: json['goal'] != null
         ? GoalState.fromJson(json['goal'] as Map<String, dynamic>)
-        : const GoalState(goalId: 'rocket', savedAmount: 0, targetAmount: 100),
+        : const GoalState(goalId: 'rocket', savedAmount: 0, targetAmount: 125),
     inventory: json['inventory'] != null
         ? InventoryState.fromJson(json['inventory'] as Map<String, dynamic>)
         : const InventoryState(
@@ -445,6 +509,7 @@ class GameState {
         ? BudgetPlan.fromJson(json['plannedBudget'] as Map<String, dynamic>)
         : null,
     workCompletedToday: json['workCompletedToday'] as bool? ?? false,
+    roomActivityUsedToday: json['roomActivityUsedToday'] as bool? ?? false,
     forecast: json['forecast'] != null
         ? ForecastInfo.fromJson(json['forecast'] as Map<String, dynamic>)
         : const ForecastInfo(
@@ -461,5 +526,8 @@ class GameState {
     dayEarned: json['dayEarned'] as int? ?? 0,
     daySpent: json['daySpent'] as int? ?? 0,
     daySaved: json['daySaved'] as int? ?? 0,
+    balanceStats: json['balanceStats'] is Map<String, dynamic>
+        ? FinnyBalance.fromJson(json['balanceStats'] as Map<String, dynamic>)
+        : const FinnyBalance(),
   );
 }

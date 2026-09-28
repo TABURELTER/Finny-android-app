@@ -57,6 +57,7 @@ class DaySummaryRecord {
 
   /// Distinguishes new cash accounting from summaries written by older builds.
   final bool reserveIsCash;
+  final bool balancedDay;
 
   bool get followedPlan =>
       plannedNeeds != null &&
@@ -66,8 +67,32 @@ class DaySummaryRecord {
           ? actualReserveSpent <= plannedReserve! &&
                 actualReserve + actualReserveSpent >= plannedReserve!
           : actualReserve <= plannedReserve!) &&
-      saved >= plannedSavings! &&
-      foodReserve > 0;
+      saved >= plannedSavings!;
+
+  String get planFeedback {
+    if (plannedNeeds == null) {
+      return 'Сегодня плана не было. Завтра начни с него.';
+    }
+    if (actualNeeds > plannedNeeds!) {
+      return 'На еду ушло больше плана. Завтра оставь на неё чуть больше.';
+    }
+    if (actualWants > plannedWants!) {
+      return 'На радости ушло больше плана. Подумай, что можно отложить.';
+    }
+    if (saved < plannedSavings!) {
+      return 'В копилку попало меньше плана. Завтра попробуй небольшой взнос.';
+    }
+    if (reserveIsCash && actualReserveSpent > plannedReserve!) {
+      return 'Неожиданность потребовала больше запаса. План можно изменить завтра.';
+    }
+    if (reserveIsCash && actualReserve + actualReserveSpent < plannedReserve!) {
+      return 'В кошельке осталось меньше запаса. Завтра оставь немного про запас.';
+    }
+    if (!reserveIsCash && actualReserve > plannedReserve!) {
+      return 'На запас ушло больше плана. Завтра сравни цены.';
+    }
+    return 'План и действия совпали. Финни учится держать баланс!';
+  }
 
   const DaySummaryRecord({
     required this.day,
@@ -87,6 +112,7 @@ class DaySummaryRecord {
     this.actualReserve = 0,
     this.actualReserveSpent = 0,
     this.reserveIsCash = true,
+    this.balancedDay = false,
   });
 
   Map<String, dynamic> toJson() => {
@@ -107,6 +133,7 @@ class DaySummaryRecord {
     'actualReserve': actualReserve,
     'actualReserveSpent': actualReserveSpent,
     'reserveIsCash': reserveIsCash,
+    'balancedDay': balancedDay,
   };
 
   factory DaySummaryRecord.fromJson(Map<String, dynamic> json) =>
@@ -128,5 +155,6 @@ class DaySummaryRecord {
         actualReserve: json['actualReserve'] as int? ?? 0,
         actualReserveSpent: json['actualReserveSpent'] as int? ?? 0,
         reserveIsCash: json['reserveIsCash'] as bool? ?? false,
+        balancedDay: json['balancedDay'] as bool? ?? false,
       );
 }

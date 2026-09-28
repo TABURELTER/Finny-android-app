@@ -10,50 +10,76 @@ import 'package:flutter/material.dart';
 
 abstract final class FinnyColors {
   // ── Brand ──
-  static const Color primary = Color(0xFF6B3DC6);
-  static const Color primaryLight = Color(0xFFEEE1FF);
-  static const Color primaryDark = Color(0xFF4F269D);
+  static Color primary = const Color(0xFFC94C19);
+  static Color primaryLight = const Color(0xFFFFE5D5);
+  static Color primaryDark = const Color(0xFF9F3815);
 
   // ── Accent (Копилка / Цели) ──
-  static const Color accent = Color(0xFF6C63FF);
-  static const Color accentLight = Color(0xFFEEECFF);
+  static Color accent = const Color(0xFFC94C19);
+  static Color accentLight = const Color(0xFFFFE5D5);
+
+  static void setAccent(Color chosen) {
+    if (chosen == const Color(0xFF6B3DC6) ||
+        chosen == const Color(0xFF5B249B) ||
+        chosen == const Color(0xFFD65321) ||
+        chosen == const Color(0xFFC94C19)) {
+      primary = const Color(0xFFC94C19);
+      primaryDark = const Color(0xFF9F3815);
+      primaryLight = const Color(0xFFFFE5D5);
+      accent = primary;
+      accentLight = primaryLight;
+      return;
+    }
+    final hsv = HSVColor.fromColor(chosen);
+    // Keep white button labels readable even when a very pale hue is picked.
+    var value = hsv.value;
+    primary = hsv.withValue(value).toColor();
+    while (primary.computeLuminance() > .26 && value > .15) {
+      value *= .9;
+      primary = hsv.withValue(value).toColor();
+    }
+    primaryDark = Color.lerp(primary, Colors.black, .25)!;
+    primaryLight = Color.lerp(primary, Colors.white, .86)!;
+    accent = primary;
+    accentLight = primaryLight;
+  }
 
   // ── Semantic ──
-  static const Color success = Color(0xFF187B52);
-  static const Color successLight = Color(0xFFDDF5E4);
-  static const Color warning = Color(0xFF9D4A22);
-  static const Color warningLight = Color(0xFFFFE8D2);
-  static const Color danger = Color(0xFFEF4444);
-  static const Color dangerLight = Color(0xFFFEF2F2);
+  static const Color success = Color(0xFF19855D);
+  static const Color successLight = Color(0xFFE5F4EB);
+  static const Color warning = Color(0xFFAC6324);
+  static const Color warningLight = Color(0xFFFFEBCF);
+  static const Color danger = Color(0xFFC74747);
+  static const Color dangerLight = Color(0xFFFBE8E6);
 
   // ── Coin Gold ──
-  static const Color coin = Color(0xFFF59E0B);
-  static const Color coinLight = Color(0xFFFFE9A3);
+  static const Color coin = Color(0xFFD59020);
+  static const Color coinLight = Color(0xFFFFE8AB);
 
   // ── Surfaces ──
-  static const Color background = Color(0xFFFFF9ED);
+  static const Color background = Color(0xFFF8F6F2);
   static const Color surface = Color(0xFFFFFFFF);
   static const Color surfaceElevated = Color(0xFFFFFFFF);
-  static const Color surfaceMuted = Color(0xFFF7F0E9);
+  static const Color surfaceMuted = Color(0xFFF4EFE9);
 
   // ── Text ──
-  static const Color textPrimary = Color(0xFF342B50);
-  static const Color textSecondary = Color(0xFF586174);
-  static const Color textTertiary = Color(0xFF6E7280);
+  static const Color textPrimary = Color(0xFF232326);
+  static const Color textSecondary = Color(0xFF595A60);
+  static const Color textTertiary = Color(0xFF77777E);
   static const Color textInverse = Color(0xFFFFFFFF);
 
   // ── Borders & Dividers ──
-  static const Color border = Color(0xFFD8D1DF);
-  static const Color borderLight = Color(0xFFEDE5EA);
-  static const Color divider = Color(0xFFEDE5EA);
+  static const Color border = Color(0xFFE1DCD5);
+  static const Color borderLight = Color(0xFFEDE9E3);
+  static const Color divider = Color(0xFFEDE9E3);
 
   // ── Food ──
-  static const Color food = Color(0xFF187B52);
-  static const Color foodLight = Color(0xFFDDF5E4);
+  static const Color food = Color(0xFF19855D);
+  static const Color foodLight = Color(0xFFE5F4EB);
 
   // ── Piggy / Savings ──
-  static const Color piggy = Color(0xFFB73778);
-  static const Color piggyLight = Color(0xFFFCE4F1);
+  static const Color piggy = Color(0xFFB35F78);
+  static const Color piggyLight = Color(0xFFF9E7EE);
 }
 
 // ─────────────────────────────────────────────

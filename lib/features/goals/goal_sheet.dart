@@ -41,243 +41,255 @@ class GoalSheet extends ConsumerWidget {
 
     return FinnyBottomSheet(
       heightFactor: .91,
-      title: 'Мечта Финни',
+      title: 'Мечта',
       subtitle: owned
           ? 'Уже сбылась!'
           : funded
           ? 'Накоплено. Теперь можно получить.'
-          : 'До цели осталось $remaining монет',
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 9, 16, 13),
-        child: Column(
-          children: [
-            Row(
-              children: [
-                for (final goal in kAvailableGoals)
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 3),
-                      child: Material(
-                        color: goal.id == current.id
-                            ? FinnyColors.primaryLight
-                            : Colors.white,
-                        borderRadius: BorderRadius.circular(14),
-                        child: InkWell(
-                          onTap: () => ref
-                              .read(gameEngineProvider.notifier)
-                              .selectGoal(goal.id),
+          : 'До цели осталось $remaining 🪙',
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 9, 16, 13),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
+                children: [
+                  for (final goal in kAvailableGoals)
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 3),
+                        child: Material(
+                          color: goal.id == current.id
+                              ? FinnyColors.primaryLight
+                              : Colors.white,
                           borderRadius: BorderRadius.circular(14),
-                          child: SizedBox(
-                            height: 58,
-                            child: Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  _icon(goal.id),
-                                  size: 23,
-                                  color: FinnyColors.primary,
-                                ),
-                                Text(
-                                  '${goal.targetCost} монет',
-                                  style: const TextStyle(
-                                    fontSize: 11,
-                                    fontWeight: FontWeight.w800,
+                          child: InkWell(
+                            onTap: () => ref
+                                .read(gameEngineProvider.notifier)
+                                .selectGoal(goal.id),
+                            borderRadius: BorderRadius.circular(14),
+                            child: SizedBox(
+                              height: 58,
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    _icon(goal.id),
+                                    size: 23,
+                                    color: FinnyColors.primary,
                                   ),
-                                ),
-                              ],
+                                  Text(
+                                    '${goal.targetCost} 🪙',
+                                    style: const TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w800,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 9),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF0E9F8),
-                borderRadius: BorderRadius.circular(19),
+                ],
               ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 68,
-                    height: 68,
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      shape: BoxShape.circle,
+              const SizedBox(height: 9),
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF0E9F8),
+                  borderRadius: BorderRadius.circular(19),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 68,
+                      height: 68,
+                      decoration: const BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        _icon(current.id),
+                        size: 35,
+                        color: FinnyColors.primary,
+                      ),
                     ),
-                    child: Icon(
-                      _icon(current.id),
-                      size: 35,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            current.name,
+                            maxLines: 2,
+                            style: const TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.w900,
+                              color: FinnyColors.textPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            owned
+                                ? 'Теперь она в домике ${state.profile.petName}.'
+                                : stage.description,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              height: 1.2,
+                              color: FinnyColors.textSecondary,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Icon(
+                    Icons.savings_rounded,
+                    size: 21,
+                    color: FinnyColors.primary,
+                  ),
+                  const SizedBox(width: 7),
+                  const Expanded(
+                    child: Text(
+                      'В копилке',
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+                  Text(
+                    '${state.savings} / ${current.targetCost}',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w900,
                       color: FinnyColors.primary,
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          current.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 17,
-                            fontWeight: FontWeight.w900,
-                            color: FinnyColors.textPrimary,
-                          ),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          owned
-                              ? 'Теперь она в домике Финни.'
-                              : stage.description,
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            height: 1.2,
-                            color: FinnyColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
                 ],
-              ),
-            ),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                const Icon(
-                  Icons.savings_rounded,
-                  size: 21,
-                  color: FinnyColors.primary,
-                ),
-                const SizedBox(width: 7),
-                const Expanded(
-                  child: Text(
-                    'В копилке',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
-                  ),
-                ),
-                Text(
-                  '${state.savings} / ${current.targetCost}',
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w900,
-                    color: FinnyColors.primary,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 6),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: LinearProgressIndicator(
-                minHeight: 9,
-                value: state.goal.progress,
-                color: FinnyColors.primary,
-                backgroundColor: const Color(0xFFE9E3EE),
-              ),
-            ),
-            const SizedBox(height: 12),
-            if (!funded && !owned) ...[
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Сколько отложим сегодня?',
-                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
-                ),
               ),
               const SizedBox(height: 6),
-              Row(
-                children: [
-                  for (final amount in [5, 10, 25])
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: 5),
-                        child: SizedBox(
-                          height: 49,
-                          child: OutlinedButton(
-                            onPressed: state.balance >= amount
-                                ? () =>
-                                      _depositAndCelebrate(context, ref, amount)
-                                : null,
-                            child: Text('+$amount'),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: LinearProgressIndicator(
+                  minHeight: 9,
+                  value: state.goal.progress,
+                  color: FinnyColors.primary,
+                  backgroundColor: const Color(0xFFE9E3EE),
+                ),
+              ),
+              const SizedBox(height: 12),
+              if (!funded && !owned) ...[
+                const Align(
+                  alignment: Alignment.centerLeft,
+                  child: Text(
+                    'Сколько отложим сегодня?',
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    for (final amount in [5, 10, 25])
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.only(right: 5),
+                          child: SizedBox(
+                            height: 49,
+                            child: OutlinedButton(
+                              onPressed: state.balance >= amount
+                                  ? () => _depositAndCelebrate(
+                                      context,
+                                      ref,
+                                      amount,
+                                    )
+                                  : null,
+                              child: Text('+$amount'),
+                            ),
                           ),
                         ),
                       ),
+                    Expanded(
+                      child: SizedBox(
+                        height: 49,
+                        child: FilledButton(
+                          onPressed: state.balance > 0
+                              ? () => _depositAllWithFoodCheck(
+                                  context,
+                                  ref,
+                                  state.balance,
+                                )
+                              : null,
+                          child: const Text('Всё'),
+                        ),
+                      ),
                     ),
-                  Expanded(
-                    child: SizedBox(
-                      height: 49,
-                      child: FilledButton(
-                        onPressed: state.balance > 0
-                            ? () => _depositAllWithFoodCheck(
-                                context,
-                                ref,
-                                state.balance,
-                              )
-                            : null,
-                        child: const Text('Всё'),
+                  ],
+                ),
+              ],
+              if (funded && !owned)
+                SizedBox(
+                  width: double.infinity,
+                  height: 54,
+                  child: FilledButton.icon(
+                    onPressed: () => _confirmClaim(
+                      context,
+                      ref,
+                      current.name,
+                      current.targetCost,
+                      state.savings,
+                    ),
+                    icon: Icon(_icon(current.id)),
+                    label: const Text(
+                      'Получить мечту',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w900,
                       ),
                     ),
                   ),
-                ],
-              ),
-            ],
-            if (funded && !owned)
-              SizedBox(
-                width: double.infinity,
-                height: 54,
-                child: FilledButton.icon(
-                  onPressed: () => _confirmClaim(
-                    context,
-                    ref,
-                    current.name,
-                    current.targetCost,
-                    state.savings,
-                  ),
-                  icon: Icon(_icon(current.id)),
-                  label: const Text(
-                    'Получить мечту',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
+                ),
+              if (owned)
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 12),
+                  child: Text(
+                    'Выбери другую мечту: накопления можно сохранить для неё.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: FinnyColors.textSecondary,
+                    ),
                   ),
                 ),
-              ),
-            if (owned)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 12),
-                child: Text(
-                  'Выбери другую мечту: накопления можно сохранить для неё.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: FinnyColors.textSecondary,
-                  ),
+              const SizedBox(height: 16),
+              const Text(
+                'План сам не списывает монеты. Взнос и получение — отдельные решения.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: FinnyColors.textSecondary,
                 ),
               ),
-            const Spacer(),
-            const Text(
-              'План сам не списывает монеты. Взнос и получение — отдельные решения.',
-              textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 12, color: FinnyColors.textSecondary),
-            ),
-            if (state.savings > 0) ...[
-              const SizedBox(height: 4),
-              TextButton.icon(
-                onPressed: () =>
-                    _confirmWithdrawal(context, ref, state.savings),
-                icon: const Icon(Icons.keyboard_return_rounded, size: 18),
-                label: const Text('Взять монеты из копилки'),
-              ),
+              if (state.savings > 0) ...[
+                const SizedBox(height: 4),
+                TextButton.icon(
+                  onPressed: () =>
+                      _confirmWithdrawal(context, ref, state.savings),
+                  icon: const Icon(Icons.keyboard_return_rounded, size: 18),
+                  label: const Text('Взять монеты из копилки'),
+                ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );
@@ -356,7 +368,7 @@ class GoalSheet extends ConsumerWidget {
                     children: [
                       Text(
                         'В копилку +$deposit',
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: FinnyColors.primaryDark,
                           fontSize: 16,
                           fontWeight: FontWeight.w900,
@@ -376,8 +388,8 @@ class GoalSheet extends ConsumerWidget {
                 const SizedBox(height: 9),
                 Text(
                   state.inventory.foodReserveDays == 0
-                      ? 'На завтра еды в запасе нет.'
-                      : 'Еды хватит только на 1 день.',
+                      ? 'В кладовке нет еды.'
+                      : 'В кладовке осталась одна порция.',
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontSize: 13,
@@ -385,7 +397,7 @@ class GoalSheet extends ConsumerWidget {
                   ),
                 ),
                 Text(
-                  'Следующая порция еды — $foodCost монет.',
+                  'Следующая порция еды — $foodCost 🪙.',
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontSize: 12,
@@ -458,7 +470,7 @@ class GoalSheet extends ConsumerWidget {
                     color: Color(0xFFE5D5FF),
                     shape: BoxShape.circle,
                   ),
-                  child: const Stack(
+                  child: Stack(
                     alignment: Alignment.center,
                     children: [
                       Icon(
@@ -493,7 +505,7 @@ class GoalSheet extends ConsumerWidget {
               ),
               const SizedBox(height: 5),
               Text(
-                '$moved монет перешли в копилку. Они не пропали.',
+                '$moved 🪙 перешли в копилку. Они не пропали.',
                 textAlign: TextAlign.center,
                 style: const TextStyle(
                   fontSize: 14,
@@ -613,8 +625,8 @@ class GoalSheet extends ConsumerWidget {
       builder: (dialogContext) => AlertDialog(
         title: const Text('Мечта готова!'),
         content: Text(
-          '$name стоит $price монет из копилки. '
-          'Было $saved, останется ${saved - price}. Получить?',
+          '$name стоит $price 🪙 из копилки. '
+          'Было $saved, останется ${saved - price} 🪙. Финни обрадуется и станет бодрее. Получить?',
         ),
         actions: [
           TextButton(
@@ -639,7 +651,7 @@ class GoalSheet extends ConsumerWidget {
       builder: (dialogContext) => AlertDialog(
         title: const Text('Открыть копилку?'),
         content: Text(
-          'Вернуть $saved монет в кошелёк? '
+          'Вернуть $saved 🪙 в кошелёк? '
           'В копилке станет 0. Мечта останется доступной позже.',
         ),
         actions: [

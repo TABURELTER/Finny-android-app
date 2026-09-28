@@ -29,87 +29,99 @@ class _TaskChallengeScreenState extends ConsumerState<TaskChallengeScreen> {
   int get free => 30 - needs - wants - savings;
   int get change => changeCoins.fold(0, (sum, coin) => sum + coin);
 
-  bool get solved => switch (id) {
-    'task_day_2' => needs >= 7 && savings >= 5,
-    'task_day_3' => deposits.every((amount) => amount >= 5),
-    'task_day_4' => choice != null,
-    'task_day_5' => change == 8,
-    'task_day_6' => choice != null,
-    'task_day_7' => choice != null && (choice != 0 || useSavings),
-    _ => false,
-  };
+  bool get solved => widget.task.scenario != null
+      ? choice != null
+      : switch (id) {
+          'task_day_2' => needs >= 7 && savings >= 5,
+          'task_day_3' => deposits.every((amount) => amount >= 5),
+          'task_day_4' => choice != null,
+          'task_day_5' => change == 8,
+          'task_day_6' => choice != null,
+          'task_day_7' => choice != null && (choice != 0 || useSavings),
+          _ => false,
+        };
 
-  String get measure => switch (id) {
-    'task_day_2' => 'В задаче 30 монет · свободно $free',
-    'task_day_3' => 'По 20 монет на каждый день',
-    'task_day_4' => 'По одному: 21 · набор: 18',
-    'task_day_5' => '20 − 12 = ?  Собрано: $change',
-    'task_day_6' => 'Сегодня в кошельке 20 монет',
-    _ => 'Кошелёк: 10 · копилка: 20',
-  };
+  String get measure =>
+      widget.task.scenario?.situation ??
+      switch (id) {
+        'task_day_2' => 'В задаче 30 🪙 · свободно $free',
+        'task_day_3' => 'По 20 🪙 на каждый день',
+        'task_day_4' => 'По одному: 21 · набор: 18',
+        'task_day_5' => '20 − 12 = ?  Собрано: $change',
+        'task_day_6' => 'Сегодня в кошельке 20 🪙',
+        _ => 'Кошелёк: 10 · копилка: 20',
+      };
 
-  String get feedback => switch (id) {
-    'task_day_2' when needs < 7 =>
-      'Еда стоит 7, а на неё сейчас $needs. Переложи ещё ${7 - needs}.',
-    'task_day_2' when savings < 5 =>
-      'На мечту отложено $savings. Попробуй найти ещё ${5 - savings}.',
-    'task_day_2' =>
-      'Еда обеспечена, мечта стала ближе, а свободно $free монет.',
-    'task_day_3' when !solved => 'Небольшой взнос каждый день складывается. Отложи хотя бы 5 в каждый день.',
-    'task_day_3' =>
-      'Если выполнить план, за три дня добавится ${deposits.fold(0, (a, b) => a + b)} монет. Сейчас это только план: для взноса открой копилку.',
-    'task_day_4' when choice == 0 => 'По одному выйдет 21. Набор за 18 сэкономит 3, если пригодятся все три завтрака. Выбрать по одному тоже можно.',
-    'task_day_4' when choice == null => 'Теперь выбери подходящую корзину.',
-    'task_day_4' => 'Набор дешевле на 3 монеты, если пригодится весь запас.',
-    'task_day_5' when change < 8 => 'Сдачи не хватает: добавь ${8 - change}.',
-    'task_day_5' when change > 8 => 'Сдачи слишком много: убери ${change - 8}.',
-    'task_day_5' => 'Верно! Продавец возвращает 8: 20 − 12 = 8.',
-    'task_day_6' when choice == 0 =>
-      'После еды за 7 останется 13. На завтра уже есть необходимое.',
-    'task_day_6' when choice == 1 =>
-      'Игрушка за 18 оставит 2. Завтра на еду за 7 не хватит 5.',
-    'task_day_6' when choice == 2 =>
-      'Сохранив 10 в запасе, ты сможешь выбрать еду завтра и оставить 3.',
-    'task_day_6' => 'Выбери, что оставить на завтра, и посмотри результат.',
-    'task_day_7' when choice == 0 && !useSavings =>
-      'На ремонт за 25 в кошельке есть 10. Подтверди отдельно 15 из копилки.',
-    'task_day_7' when choice == 0 =>
-      'Крыша надёжная. Из копилки ушло 15, поэтому до мечты снова дальше.',
-    'task_day_7' when choice == 1 =>
-      'Заплатка стоит 8: в кошельке останется 2. Позже потребуется ремонт.',
-    'task_day_7' when choice == 2 => 'Монеты остались, но крыша протекает. Можно заработать или накопить на ремонт.',
-    _ => 'Сравни варианты и выбери план на случай дождя.',
-  };
+  String get feedback => widget.task.scenario != null
+      ? choice == null
+            ? widget.task.scenario!.instruction
+            : widget.task.scenario!.options[choice!].feedback
+      : switch (id) {
+          'task_day_2' when needs < 7 =>
+            'Еда стоит 7, а на неё сейчас $needs. Переложи ещё ${7 - needs}.',
+          'task_day_2' when savings < 5 =>
+            'На мечту отложено $savings. Попробуй найти ещё ${5 - savings}.',
+          'task_day_2' =>
+            'Еда обеспечена, мечта стала ближе, а свободно $free 🪙.',
+          'task_day_3' when !solved => 'Небольшой взнос каждый день складывается. Отложи хотя бы 5 в каждый день.',
+          'task_day_3' =>
+            'Если выполнить план, за три дня добавится ${deposits.fold(0, (a, b) => a + b)} 🪙. Сейчас это только план: для взноса открой копилку.',
+          'task_day_4' when choice == 0 => 'По одному выйдет 21. Набор за 18 сэкономит 3, если пригодятся все три завтрака. Выбрать по одному тоже можно.',
+          'task_day_4' when choice == null =>
+            'Теперь выбери подходящую корзину.',
+          'task_day_4' => 'Набор дешевле на 3 🪙, если пригодится весь запас.',
+          'task_day_5' when change < 8 =>
+            'Сдачи не хватает: добавь ${8 - change}.',
+          'task_day_5' when change > 8 =>
+            'Сдачи слишком много: убери ${change - 8}.',
+          'task_day_5' => 'Верно! Продавец возвращает 8: 20 − 12 = 8.',
+          'task_day_6' when choice == 0 =>
+            'После еды за 7 останется 13. На завтра уже есть необходимое.',
+          'task_day_6' when choice == 1 =>
+            'Игрушка за 18 оставит 2. Завтра на еду за 7 не хватит 5.',
+          'task_day_6' when choice == 2 =>
+            'Сохранив 10 в запасе, ты сможешь выбрать еду завтра и оставить 3.',
+          'task_day_6' =>
+            'Выбери, что оставить на завтра, и посмотри результат.',
+          'task_day_7' when choice == 0 && !useSavings => 'На ремонт за 25 в кошельке есть 10. Подтверди отдельно 15 из копилки.',
+          'task_day_7' when choice == 0 => 'Крыша надёжная. Из копилки ушло 15, поэтому до мечты снова дальше.',
+          'task_day_7' when choice == 1 => 'Заплатка стоит 8: в кошельке останется 2. Позже потребуется ремонт.',
+          'task_day_7' when choice == 2 => 'Монеты остались, но крыша протекает. Можно заработать или накопить на ремонт.',
+          _ => 'Сравни варианты и выбери план на случай дождя.',
+        };
 
-  String get instruction => switch (id) {
-    'task_day_2' when needs < 7 =>
-      'Начни с еды: добавь в конверт 7 монет кнопками +5 и +.',
-    'task_day_2' when savings < 5 =>
-      'Еда готова! Теперь отложи хотя бы 5 монет на мечту.',
-    'task_day_2' => 'Ты распределил главное. Нажми «Проверить решение».',
-    'task_day_3' => 'Добавь по 5 монет для каждого из трёх дней.',
-    'task_day_4' => 'Выбери корзину и проверь, сколько стоят три завтрака.',
-    'task_day_5' => 'Нажимай на монеты, чтобы собрать сдачу.',
-    'task_day_6' => 'Выбери один вариант и посмотри на завтрашний день.',
-    _ => 'Выбери план на случай дождя и проверь последствия.',
-  };
+  String get instruction =>
+      widget.task.scenario?.instruction ??
+      switch (id) {
+        'task_day_2' when needs < 7 =>
+          'Начни с еды: добавь в конверт 7 🪙 кнопками +5 и +.',
+        'task_day_2' when savings < 5 =>
+          'Еда готова! Теперь отложи хотя бы 5 🪙 на мечту.',
+        'task_day_2' => 'Ты распределил главное. Нажми «Проверить решение».',
+        'task_day_3' => 'Добавь по 5 🪙 для каждого из трёх дней.',
+        'task_day_4' => 'Выбери корзину и проверь, сколько стоят три завтрака.',
+        'task_day_5' => 'Нажимай на монеты, чтобы собрать сдачу.',
+        'task_day_6' => 'Выбери один вариант и посмотри на завтрашний день.',
+        _ => 'Выбери план на случай дождя и проверь последствия.',
+      };
 
-  String get takeaway => switch (id) {
-    'task_day_2' => 'Сначала оставь деньги на необходимое. Потом решай, сколько потратить и сколько отложить.',
-    'task_day_3' =>
-      'Маленькие взносы каждый день складываются в большую сумму.',
-    'task_day_4' =>
-      'Три завтрака по 7 стоят 21. Набор за 18 дешевле на 3, если нужен весь.',
-    'task_day_5' => 'Сдачу можно проверить вычитанием: 20 − 12 = 8.',
-    'task_day_6' when choice == 1 =>
-      'Игрушка сейчас оставит только 2 монеты. Завтра на еду за 7 не хватит.',
-    'task_day_6' =>
-      'Сегодняшний выбор меняет то, что ты сможешь купить завтра.',
-    'task_day_7' when choice == 0 =>
-      'Запас выручил с ремонтом, но теперь до мечты снова дальше.',
-    'task_day_7' => 'На неожиданность можно потратить запас, выбрать временное решение или подождать.',
-    _ => widget.task.educationalFeedback,
-  };
+  String get takeaway =>
+      widget.task.scenario?.takeaway ??
+      switch (id) {
+        'task_day_2' => 'Сначала оставь деньги на необходимое. Потом решай, сколько потратить и сколько отложить.',
+        'task_day_3' =>
+          'Маленькие взносы каждый день складываются в большую сумму.',
+        'task_day_4' => 'Три завтрака по 7 стоят 21. Набор за 18 дешевле на 3, если нужен весь.',
+        'task_day_5' => 'Сдачу можно проверить вычитанием: 20 − 12 = 8.',
+        'task_day_6' when choice == 1 =>
+          'Игрушка сейчас оставит только 2 🪙. Завтра на еду за 7 не хватит.',
+        'task_day_6' =>
+          'Сегодняшний выбор меняет то, что ты сможешь купить завтра.',
+        'task_day_7' when choice == 0 =>
+          'Запас выручил с ремонтом, но теперь до мечты снова дальше.',
+        'task_day_7' => 'На неожиданность можно потратить запас, выбрать временное решение или подождать.',
+        _ => widget.task.educationalFeedback,
+      };
 
   void _envelope(int index, int delta) {
     final current = [needs, wants, savings][index];
@@ -146,9 +158,13 @@ class _TaskChallengeScreenState extends ConsumerState<TaskChallengeScreen> {
       setState(() => completed = true);
       return;
     }
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Эта миссия уже выполнена.')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text(
+          'Сейчас награду получить нельзя. Проверь день и попробуй снова.',
+        ),
+      ),
+    );
   }
 
   @override
@@ -168,7 +184,7 @@ class _TaskChallengeScreenState extends ConsumerState<TaskChallengeScreen> {
                     children: [
                       Row(
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.lightbulb_rounded,
                             color: FinnyColors.primary,
                           ),
@@ -176,8 +192,6 @@ class _TaskChallengeScreenState extends ConsumerState<TaskChallengeScreen> {
                           Expanded(
                             child: Text(
                               widget.task.title,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
                                 fontSize: 19,
                                 fontWeight: FontWeight.w900,
@@ -190,8 +204,6 @@ class _TaskChallengeScreenState extends ConsumerState<TaskChallengeScreen> {
                       const SizedBox(height: 5),
                       Text(
                         widget.task.prompt,
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
                         style: const TextStyle(
                           fontSize: 14,
                           height: 1.25,
@@ -200,7 +212,8 @@ class _TaskChallengeScreenState extends ConsumerState<TaskChallengeScreen> {
                       ),
                       const SizedBox(height: 9),
                       Container(
-                        height: 40,
+                        constraints: const BoxConstraints(minHeight: 40),
+                        padding: const EdgeInsets.symmetric(vertical: 8),
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
                           color: FinnyColors.accentLight,
@@ -208,8 +221,7 @@ class _TaskChallengeScreenState extends ConsumerState<TaskChallengeScreen> {
                         ),
                         child: Text(
                           measure,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
                           style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w800,
@@ -266,7 +278,7 @@ class _TaskChallengeScreenState extends ConsumerState<TaskChallengeScreen> {
                               : () => setState(() => checked = true),
                           child: Text(
                             checked && solved
-                                ? 'Забрать 5 монет'
+                                ? 'Забрать 3 🪙'
                                 : 'Проверить решение',
                             style: const TextStyle(
                               fontSize: 16,
@@ -428,7 +440,7 @@ class _TaskChallengeScreenState extends ConsumerState<TaskChallengeScreen> {
                             child: Semantics(
                               liveRegion: true,
                               label:
-                                  'Награда: пять монет. Теперь в кошельке ${state.balance} монет.',
+                                  'Награда: 3 🪙. Теперь в кошельке ${state.balance} 🪙.',
                               child: Container(
                                 height: compact ? 72 : 82,
                                 decoration: BoxDecoration(
@@ -465,7 +477,7 @@ class _TaskChallengeScreenState extends ConsumerState<TaskChallengeScreen> {
                                             CrossAxisAlignment.start,
                                         children: [
                                           const Text(
-                                            '+5 монет',
+                                            '+3 🪙 · Финни стало лучше',
                                             style: TextStyle(
                                               fontSize: 23,
                                               fontWeight: FontWeight.w900,
@@ -517,8 +529,6 @@ class _TaskChallengeScreenState extends ConsumerState<TaskChallengeScreen> {
                                 const SizedBox(height: 2),
                                 Text(
                                   takeaway,
-                                  maxLines: compact ? 3 : 4,
-                                  overflow: TextOverflow.ellipsis,
                                   style: const TextStyle(
                                     fontSize: 14,
                                     height: 1.2,
@@ -562,6 +572,21 @@ class _TaskChallengeScreenState extends ConsumerState<TaskChallengeScreen> {
   }
 
   Widget _playArea() {
+    final scenario = widget.task.scenario;
+    if (scenario != null) {
+      return ListView(
+        children: [
+          for (var index = 0; index < scenario.options.length; index++)
+            _tile(
+              scenario.options[index].title,
+              scenario.options[index].hint,
+              Icons.touch_app_rounded,
+              selected: choice == index,
+              onTap: () => _select(index),
+            ),
+        ],
+      );
+    }
     final motion =
         ref.watch(
           gameEngineProvider.select(
@@ -738,7 +763,7 @@ class _TaskChallengeScreenState extends ConsumerState<TaskChallengeScreen> {
           ),
           _tile(
             'Временная заплатка · 8',
-            'Останется 2 монеты',
+            'Останется 2 🪙',
             Icons.build_rounded,
             selected: choice == 1,
             onTap: () => _select(1),
@@ -798,11 +823,13 @@ class _TaskChallengeScreenState extends ConsumerState<TaskChallengeScreen> {
         Icon(icon, color: tone ?? FinnyColors.primary, size: 20),
         const SizedBox(width: 5),
         Expanded(
-          child: Text(
-            label,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              label,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+            ),
           ),
         ),
         IconButton(
@@ -868,7 +895,7 @@ class _TaskChallengeScreenState extends ConsumerState<TaskChallengeScreen> {
         onTap: onTap,
         borderRadius: BorderRadius.circular(14),
         child: Container(
-          height: 57,
+          constraints: const BoxConstraints(minHeight: 70),
           padding: const EdgeInsets.symmetric(horizontal: 11),
           decoration: BoxDecoration(
             border: Border.all(
@@ -888,8 +915,6 @@ class _TaskChallengeScreenState extends ConsumerState<TaskChallengeScreen> {
                   children: [
                     Text(
                       title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w800,
@@ -897,8 +922,6 @@ class _TaskChallengeScreenState extends ConsumerState<TaskChallengeScreen> {
                     ),
                     Text(
                       detail,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         fontSize: 11,
                         color: FinnyColors.textSecondary,
@@ -1024,14 +1047,15 @@ class _EnvelopeBoard extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 2),
-                          Text(
-                            labels[i],
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w800,
-                              color: FinnyColors.textPrimary,
+                          FittedBox(
+                            fit: BoxFit.scaleDown,
+                            child: Text(
+                              labels[i],
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w800,
+                                color: FinnyColors.textPrimary,
+                              ),
                             ),
                           ),
                         ],

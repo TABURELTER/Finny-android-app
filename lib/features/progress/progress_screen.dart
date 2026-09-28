@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
@@ -10,6 +9,7 @@ import '../../game/content/glossary.dart';
 import '../../game/engine/game_engine.dart';
 import '../../data/models/history_models.dart';
 import '../tasks/task_challenge_screen.dart';
+import '../../shared/widgets/conditional_motion.dart';
 
 class ProgressScreen extends ConsumerWidget {
   final int initialTab;
@@ -32,6 +32,9 @@ class ProgressScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(gameEngineProvider);
+    final motion =
+        state.settings.animationsEnabled &&
+        !MediaQuery.disableAnimationsOf(context);
 
     return DefaultTabController(
       length: 3,
@@ -84,9 +87,9 @@ class ProgressScreen extends ConsumerWidget {
         ),
         body: TabBarView(
           children: [
-            _HistoryTab(history: state.history),
+            _HistoryTab(history: state.history, motion: motion),
             const _TasksTab(),
-            const _GlossaryTab(),
+            _GlossaryTab(motion: motion),
           ],
         ),
       ),
@@ -98,7 +101,8 @@ class ProgressScreen extends ConsumerWidget {
 
 class _HistoryTab extends StatelessWidget {
   final List<DaySummaryRecord> history;
-  const _HistoryTab({required this.history});
+  final bool motion;
+  const _HistoryTab({required this.history, required this.motion});
 
   @override
   Widget build(BuildContext context) {
@@ -107,11 +111,7 @@ class _HistoryTab extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(
-              Icons.edit_note_rounded,
-              size: 44,
-              color: FinnyColors.primary,
-            ),
+            Icon(Icons.edit_note_rounded, size: 44, color: FinnyColors.primary),
             const Gap(12),
             Text(
               'История пока пуста',
@@ -210,10 +210,7 @@ class _HistoryTab extends StatelessWidget {
                 ),
             ],
           ),
-        ).animate().fadeIn(
-          duration: 300.ms,
-          delay: Duration(milliseconds: index * 60),
-        );
+        ).fadeInWhen(motion, delay: Duration(milliseconds: index * 60));
       },
     );
   }
@@ -259,19 +256,60 @@ class _TasksTab extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(gameEngineProvider);
+    final motion =
+        state.settings.animationsEnabled &&
+        !MediaQuery.disableAnimationsOf(context);
     final currentDay = state.day;
-    final tasks = [...kFinancialTasks]
-      ..sort((a, b) {
-        final byDay = a.day.compareTo(b.day);
-        return byDay != 0 ? byDay : a.title.compareTo(b.title);
-      });
+    final demoActive = ref.read(gameRepositoryProvider).isDemoActive;
+    final tasks =
+        kFinancialTasks
+            .where((task) => demoActive || task.day <= currentDay)
+            .toList()
+          ..sort((a, b) {
+            final aDone = state.completedTasks.any(
+              (done) => done.taskId == a.id,
+            );
+            final bDone = state.completedTasks.any(
+              (done) => done.taskId == b.id,
+            );
+            if (aDone != bDone) return aDone ? 1 : -1;
+            final byDay = b.day.compareTo(a.day);
+            return byDay != 0 ? byDay : a.title.compareTo(b.title);
+          });
 
     return ListView.separated(
       padding: const EdgeInsets.all(FinnySpacing.lg),
-      itemCount: tasks.length,
+      itemCount: tasks.length + 1,
       separatorBuilder: (_, _) => const Gap(10),
       itemBuilder: (context, index) {
-        final task = tasks[index];
+        if (index == 0) {
+          return FinnyCard(
+            padding: const EdgeInsets.all(15),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Задания Финни',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w900),
+                ),
+                const Gap(5),
+                const Text(
+                  'За новое решение: +3 🪙, а Финни станет лучше. Ошибаться можно — попробуй ещё раз.',
+                  style: TextStyle(fontSize: 14, height: 1.3),
+                ),
+                const Gap(6),
+                Text(
+                  'Доступно сейчас: ${tasks.where((task) => !state.completedTasks.any((done) => done.taskId == task.id)).length}',
+                  style: TextStyle(
+                    color: FinnyColors.primary,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
+        final task = tasks[index - 1];
         final matches = state.completedTasks.where(
           (done) => done.taskId == task.id,
         );
@@ -359,7 +397,7 @@ class _TasksTab extends ConsumerWidget {
                     ],
                   ),
                 ),
-              if (currentDay >= task.day && !isPassed)
+              if ((demoActive || currentDay >= task.day) && !isPassed)
                 Padding(
                   padding: const EdgeInsets.only(top: 10),
                   child: SizedBox(
@@ -381,10 +419,7 @@ class _TasksTab extends ConsumerWidget {
                 ),
             ],
           ),
-        ).animate().fadeIn(
-          duration: 300.ms,
-          delay: Duration(milliseconds: index * 60),
-        );
+        ).fadeInWhen(motion, delay: Duration(milliseconds: index * 60));
       },
     );
   }
@@ -393,7 +428,8 @@ class _TasksTab extends ConsumerWidget {
 // ── Словарик ──
 
 class _GlossaryTab extends StatelessWidget {
-  const _GlossaryTab();
+  final bool motion;
+  const _GlossaryTab({required this.motion});
 
   @override
   Widget build(BuildContext context) {
@@ -444,10 +480,7 @@ class _GlossaryTab extends StatelessWidget {
               ),
             ],
           ),
-        ).animate().fadeIn(
-          duration: 300.ms,
-          delay: Duration(milliseconds: index * 60),
-        );
+        ).fadeInWhen(motion, delay: Duration(milliseconds: index * 60));
       },
     );
   }

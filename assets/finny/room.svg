@@ -1,0 +1,401 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="360" height="360" viewBox="0 0 360 360">
+  <title>Уютная комната Финни — Прямоугольное окно со ставнями</title>
+  <defs>
+    <!-- Градиенты стен, пола и ниши -->
+    <linearGradient id="wall-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#FFF3E2"/>
+      <stop offset="100%" stop-color="#F6E1C8"/>
+    </linearGradient>
+
+    <linearGradient id="floor-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#E2B892"/>
+      <stop offset="100%" stop-color="#CD9B70"/>
+    </linearGradient>
+
+    <linearGradient id="niche-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#F0D4CD"/>
+      <stop offset="100%" stop-color="#FAEBE6"/>
+    </linearGradient>
+
+    <linearGradient id="sky-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#6DC8EB"/>
+      <stop offset="60%" stop-color="#BBEAF6"/>
+      <stop offset="100%" stop-color="#FFF2D6"/>
+    </linearGradient>
+
+    <linearGradient id="sunbeam-grad" x1="15%" y1="10%" x2="85%" y2="90%">
+      <stop offset="0%" stop-color="#FFF6D8" stop-opacity="0.45"/>
+      <stop offset="60%" stop-color="#FFEAB2" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#FFE79A" stop-opacity="0"/>
+    </linearGradient>
+
+    <!-- Свечение лампочек гирлянды -->
+    <radialGradient id="bulb-glow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#FFF0A0" stop-opacity="0.9"/>
+      <stop offset="35%" stop-color="#FFD65C" stop-opacity="0.4"/>
+      <stop offset="100%" stop-color="#FFA826" stop-opacity="0"/>
+    </radialGradient>
+
+    <!-- Прямоугольная обрезка для стекла окна -->
+    <clipPath id="window-rect-clip">
+      <rect x="33" y="80" width="50" height="94" rx="1.5"/>
+    </clipPath>
+  </defs>
+
+  <!-- Задняя стена -->
+  <rect width="360" height="258" fill="url(#wall-grad)"/>
+
+  <!-- Ниша-арка с фаской глубины -->
+  <path d="M102 258V146c0-54 35-88 78-88s78 34 78 88v112Z" fill="#E2C2B9"/>
+  <path d="M107 258V147c0-50 32-83 73-83s73 33 73 83v111Z" fill="url(#niche-grad)"/>
+
+  <!-- ================= ДЕТАЛЬНАЯ ГИРЛЯНДА НАД КРОВАТЬЮ ================= -->
+  <g id="garland">
+    <!-- Настенные крепления -->
+    <circle cx="113" cy="107" r="3.5" fill="#000" opacity="0.12"/>
+    <circle cx="112" cy="106" r="3" fill="#84573E"/>
+    <circle cx="112" cy="106" r="1.5" fill="#E5BA6F"/>
+
+    <circle cx="249" cy="107" r="3.5" fill="#000" opacity="0.12"/>
+    <circle cx="248" cy="106" r="3" fill="#84573E"/>
+    <circle cx="248" cy="106" r="1.5" fill="#E5BA6F"/>
+
+    <!-- Нить 1: Тканевые флажки -->
+    <path d="M112 106 Q180 134 248 106" fill="none" stroke="#C39D88" stroke-width="1.8"/>
+
+    <!-- Флажок 1: Розовый -->
+    <g transform="translate(122, 110)">
+      <polygon points="0,0 16,3 8,20" fill="#E67B67"/>
+      <polygon points="2,2 14,4 8,16" fill="#EE8D7A"/>
+      <circle cx="8" cy="22" r="1.5" fill="#FBD576"/>
+    </g>
+
+    <!-- Флажок 2: Мятный полосатый -->
+    <g transform="translate(144, 116)">
+      <polygon points="0,0 16,3 8,20" fill="#69BCA4"/>
+      <line x1="4" y1="2" x2="10" y2="16" stroke="#90D7C3" stroke-width="1.5"/>
+      <circle cx="8" cy="22" r="1.5" fill="#FBD576"/>
+    </g>
+
+    <!-- Флажок 3: Горчичный в горошек -->
+    <g transform="translate(172, 120)">
+      <polygon points="0,0 16,0 8,20" fill="#F4C758"/>
+      <circle cx="8" cy="7" r="1.5" fill="#FFFFFF" opacity="0.8"/>
+      <circle cx="8" cy="13" r="1.2" fill="#FFFFFF" opacity="0.8"/>
+      <circle cx="8" cy="22" r="1.5" fill="#E67B67"/>
+    </g>
+
+    <!-- Флажок 4: Лавандовый -->
+    <g transform="translate(200, 116)">
+      <polygon points="0,2 16,0 8,20" fill="#A89AC7"/>
+      <polygon points="2,4 14,2 8,16" fill="#BCB0D6"/>
+      <circle cx="8" cy="22" r="1.5" fill="#FBD576"/>
+    </g>
+
+    <!-- Флажок 5: Персиковый -->
+    <g transform="translate(222, 110)">
+      <polygon points="0,2 16,0 8,20" fill="#EAA794"/>
+      <line x1="12" y1="2" x2="6" y2="16" stroke="#F6C5B8" stroke-width="1.5"/>
+      <circle cx="8" cy="22" r="1.5" fill="#69BCA4"/>
+    </g>
+
+    <!-- Нить 2: Световая гирлянда с тёплыми лампами -->
+    <path d="M112 108 Q180 148 248 108" fill="none" stroke="#68544B" stroke-width="1.2"/>
+
+    <!-- Лампочки с ореолами свечения -->
+    <g transform="translate(126, 117)"><circle cx="0" cy="0" r="11" fill="url(#bulb-glow)"/><rect x="-1.5" y="-3" width="3" height="3" rx="0.5" fill="#4A3831"/><circle cx="0" cy="2" r="3.2" fill="#FFF9DF"/><circle cx="0" cy="2" r="1.6" fill="#FFFFFF"/></g>
+    <g transform="translate(144, 126)"><circle cx="0" cy="0" r="12" fill="url(#bulb-glow)"/><rect x="-1.5" y="-3" width="3" height="3" rx="0.5" fill="#4A3831"/><circle cx="0" cy="2" r="3.2" fill="#FFF9DF"/><circle cx="0" cy="2" r="1.6" fill="#FFFFFF"/></g>
+    <g transform="translate(164, 133)"><circle cx="0" cy="0" r="13" fill="url(#bulb-glow)"/><rect x="-1.5" y="-3" width="3" height="3" rx="0.5" fill="#4A3831"/><circle cx="0" cy="2" r="3.5" fill="#FFF9DF"/><circle cx="0" cy="2" r="1.8" fill="#FFFFFF"/></g>
+    <g transform="translate(180, 135)"><circle cx="0" cy="1" r="14" fill="url(#bulb-glow)"/><rect x="-1.5" y="-3" width="3" height="3" rx="0.5" fill="#4A3831"/><circle cx="0" cy="2" r="3.8" fill="#FFF9DF"/><circle cx="0" cy="2" r="2" fill="#FFFFFF"/></g>
+    <g transform="translate(196, 133)"><circle cx="0" cy="0" r="13" fill="url(#bulb-glow)"/><rect x="-1.5" y="-3" width="3" height="3" rx="0.5" fill="#4A3831"/><circle cx="0" cy="2" r="3.5" fill="#FFF9DF"/><circle cx="0" cy="2" r="1.8" fill="#FFFFFF"/></g>
+    <g transform="translate(216, 126)"><circle cx="0" cy="0" r="12" fill="url(#bulb-glow)"/><rect x="-1.5" y="-3" width="3" height="3" rx="0.5" fill="#4A3831"/><circle cx="0" cy="2" r="3.2" fill="#FFF9DF"/><circle cx="0" cy="2" r="1.6" fill="#FFFFFF"/></g>
+    <g transform="translate(234, 117)"><circle cx="0" cy="0" r="11" fill="url(#bulb-glow)"/><rect x="-1.5" y="-3" width="3" height="3" rx="0.5" fill="#4A3831"/><circle cx="0" cy="2" r="3.2" fill="#FFF9DF"/><circle cx="0" cy="2" r="1.6" fill="#FFFFFF"/></g>
+  </g>
+
+  <!-- Пол и плинтус -->
+  <rect x="0" y="248" width="360" height="10" fill="#B2825B"/>
+  <rect x="0" y="248" width="360" height="2.5" fill="#996943"/>
+  <rect x="0" y="258" width="360" height="102" fill="url(#floor-grad)"/>
+
+  <!-- Стыки паркетных досок -->
+  <g stroke="#BA8559" stroke-width="1.5" opacity="0.65">
+    <line x1="0" y1="282" x2="360" y2="282"/>
+    <line x1="0" y1="307" x2="360" y2="307"/>
+    <line x1="0" y1="333" x2="360" y2="333"/>
+    <line x1="75" y1="258" x2="75" y2="282"/>
+    <line x1="220" y1="258" x2="220" y2="282"/>
+    <line x1="140" y1="282" x2="140" y2="307"/>
+    <line x1="305" y1="282" x2="305" y2="307"/>
+    <line x1="60" y1="307" x2="60" y2="333"/>
+    <line x1="245" y1="307" x2="245" y2="333"/>
+    <line x1="160" y1="333" x2="160" y2="360"/>
+  </g>
+
+  <!-- ================= ПРЯМОУГОЛЬНОЕ ОКНО, СТАВНИ-ЖАЛЮЗИ И ПОДОКОННИК ================= -->
+  <!-- Тень от оконной конструкции на стене -->
+  <rect x="5" y="74" width="106" height="104" rx="2" fill="#000" opacity="0.08"/>
+
+  <!-- Внешний наличник прямоугольного окна с карнизом -->
+  <rect x="29" y="73" width="58" height="4" rx="1" fill="#FFFFFF"/>
+  <rect x="30" y="76" width="56" height="99" rx="1" fill="#FFFFFF"/>
+  <rect x="32" y="78" width="52" height="97" rx="1" fill="#D3DDE0"/>
+
+  <!-- Стекло и вид на улицу -->
+  <g clip-path="url(#window-rect-clip)">
+    <rect id="window-sky" x="33" y="80" width="50" height="94" fill="url(#sky-grad)"/>
+    <!-- Солнце -->
+    <g id="weather-sun">
+    <circle cx="68" cy="104" r="19" fill="#FFEBA4" opacity="0.45"/>
+    <circle cx="68" cy="104" r="11" fill="#FFD25F"/>
+    </g>
+    <!-- Птицы в небе -->
+    <g id="weather-birds">
+    <path d="M42 93q2-3 4 0q2-3 4 0" fill="none" stroke="#5D8596" stroke-width="0.9"/>
+    <path d="M51 89q1.5-2 3 0q1.5-2 3 0" fill="none" stroke="#5D8596" stroke-width="0.8"/>
+    </g>
+    <!-- Облака -->
+    <g id="weather-soft-cloud">
+    <path d="M30 125c4-6 12-5 15 1 3-3 9-2 11 2 4 0 7 4 5 8H28v-8c1-1 1-2 2-3Z" fill="#FFFFFF" opacity="0.9"/>
+    </g>
+    <g id="weather-cloud" style="display:none">
+      <path d="M28 120q7-12 18-7 8-13 20-6 12-2 18 12v18H28Z" fill="#D4DFE2"/>
+      <path d="M31 139q22-7 48-3" fill="none" stroke="#B9CCD1" stroke-width="2"/>
+    </g>
+    <g id="weather-rain" style="display:none">
+      <path d="M27 117q8-13 19-8 10-13 22-6 11-1 17 13v21H27Z" fill="#7B91A2"/>
+      <path d="m35 140-3 9m14-10-3 9m14-10-3 9m14-10-3 9m14-10-3 9m-40 7-3 9m16-9-3 9m16-9-3 9" stroke="#E2F3F6" stroke-width="2" stroke-linecap="round"/>
+    </g>
+    <g id="weather-windy" style="display:none">
+      <path d="M27 142q21-9 43 1m-34 8q25-8 46 0m-43 9q17-5 31 1" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" opacity=".85"/>
+    </g>
+    <g id="weather-festival" style="display:none">
+      <path d="M33 115q24 12 50-2" fill="none" stroke="#88688C" stroke-width="1.3"/>
+      <path d="m39 119 3 6 3-5m9 3 3 6 3-6m9-3 3 7 3-8" fill="#F19876" stroke="#F19876" stroke-width="1"/>
+    </g>
+    <!-- Дальние холмы -->
+    <path d="M33 158q16-16 32-2 8-5 18 2v20H33Z" fill="#6FBDA6"/>
+    <path d="M33 168q14-11 30 2 10-5 20 2v10H33Z" fill="#4B9A84"/>
+
+    <!-- Диагональные стеклянные блики -->
+    <polygon points="36,80 44,80 34,136 33,136" fill="#FFFFFF" opacity="0.32"/>
+    <polygon points="48,80 54,80 40,165 36,165" fill="#FFFFFF" opacity="0.22"/>
+  </g>
+
+  <!-- Прямоугольный оконный переплёт (6 створок) -->
+  <!-- Вертикальный горбылёк -->
+  <line x1="58" y1="80" x2="58" y2="174" stroke="#FFFFFF" stroke-width="3"/>
+  <line x1="58" y1="80" x2="58" y2="174" stroke="#D3DCDE" stroke-width="1"/>
+  <!-- Две горизонтальные перекладины -->
+  <line x1="33" y1="111" x2="83" y2="111" stroke="#FFFFFF" stroke-width="3"/>
+  <line x1="33" y1="111" x2="83" y2="111" stroke="#D3DCDE" stroke-width="1"/>
+  <line x1="33" y1="143" x2="83" y2="143" stroke="#FFFFFF" stroke-width="3"/>
+  <line x1="33" y1="143" x2="83" y2="143" stroke="#D3DCDE" stroke-width="1"/>
+
+  <!-- ЛЕВАЯ СТАВНЯ-ЖАЛЮЗИ (Ширина 25px) -->
+  <g id="shutter-left">
+    <!-- Рама ставни -->
+    <rect x="6" y="76" width="25" height="98" rx="2" fill="#FFFDF8" stroke="#E2DAD0" stroke-width="1.2"/>
+    <!-- Внутренние секции под ламели -->
+    <rect x="9" y="79" width="19" height="42" rx="1.5" fill="#EFE8DC"/>
+    <rect x="9" y="127" width="19" height="43" rx="1.5" fill="#EFE8DC"/>
+    <!-- Средняя перекладина рамы -->
+    <rect x="6" y="121" width="25" height="6" fill="#F4EDE2"/>
+
+    <!-- Ламели-жалюзи (верхняя секция) -->
+    <g stroke="#DFCDB9" stroke-width="2" stroke-linecap="round">
+      <line x1="11" y1="83" x2="26" y2="83"/><line x1="11" y1="87" x2="26" y2="87"/>
+      <line x1="11" y1="91" x2="26" y2="91"/><line x1="11" y1="95" x2="26" y2="95"/>
+      <line x1="11" y1="99" x2="26" y2="99"/><line x1="11" y1="103" x2="26" y2="103"/>
+      <line x1="11" y1="107" x2="26" y2="107"/><line x1="11" y1="111" x2="26" y2="111"/>
+      <line x1="11" y1="115" x2="26" y2="115"/><line x1="11" y1="119" x2="26" y2="119"/>
+    </g>
+    <!-- Ламели-жалюзи (нижняя секция) -->
+    <g stroke="#DFCDB9" stroke-width="2" stroke-linecap="round">
+      <line x1="11" y1="130" x2="26" y2="130"/><line x1="11" y1="134" x2="26" y2="134"/>
+      <line x1="11" y1="138" x2="26" y2="138"/><line x1="11" y1="142" x2="26" y2="142"/>
+      <line x1="11" y1="146" x2="26" y2="146"/><line x1="11" y1="150" x2="26" y2="150"/>
+      <line x1="11" y1="154" x2="26" y2="154"/><line x1="11" y1="158" x2="26" y2="158"/>
+      <line x1="11" y1="162" x2="26" y2="162"/><line x1="11" y1="166" x2="26" y2="166"/>
+    </g>
+
+    <!-- Петли крепления к оконной коробке -->
+    <rect x="29.5" y="85" width="2.5" height="8" rx="1" fill="#4B3D36"/>
+    <rect x="29.5" y="152" width="2.5" height="8" rx="1" fill="#4B3D36"/>
+  </g>
+
+  <!-- ПРАВАЯ СТАВНЯ-ЖАЛЮЗИ (Ширина 25px) -->
+  <g id="shutter-right">
+    <!-- Рама ставни -->
+    <rect x="85" y="76" width="25" height="98" rx="2" fill="#FFFDF8" stroke="#E2DAD0" stroke-width="1.2"/>
+    <!-- Внутренние секции под ламели -->
+    <rect x="88" y="79" width="19" height="42" rx="1.5" fill="#EFE8DC"/>
+    <rect x="88" y="127" width="19" height="43" rx="1.5" fill="#EFE8DC"/>
+    <!-- Средняя перекладина рамы -->
+    <rect x="85" y="121" width="25" height="6" fill="#F4EDE2"/>
+
+    <!-- Ламели-жалюзи (верхняя секция) -->
+    <g stroke="#DFCDB9" stroke-width="2" stroke-linecap="round">
+      <line x1="90" y1="83" x2="105" y2="83"/><line x1="90" y1="87" x2="105" y2="87"/>
+      <line x1="90" y1="91" x2="105" y2="91"/><line x1="90" y1="95" x2="105" y2="95"/>
+      <line x1="90" y1="99" x2="105" y2="99"/><line x1="90" y1="103" x2="105" y2="103"/>
+      <line x1="90" y1="107" x2="105" y2="107"/><line x1="90" y1="111" x2="105" y2="111"/>
+      <line x1="90" y1="115" x2="105" y2="115"/><line x1="90" y1="119" x2="105" y2="119"/>
+    </g>
+    <!-- Ламели-жалюзи (нижняя секция) -->
+    <g stroke="#DFCDB9" stroke-width="2" stroke-linecap="round">
+      <line x1="90" y1="130" x2="105" y2="130"/><line x1="90" y1="134" x2="105" y2="134"/>
+      <line x1="90" y1="138" x2="105" y2="138"/><line x1="90" y1="142" x2="105" y2="142"/>
+      <line x1="90" y1="146" x2="105" y2="146"/><line x1="90" y1="150" x2="105" y2="150"/>
+      <line x1="90" y1="154" x2="105" y2="154"/><line x1="90" y1="158" x2="105" y2="158"/>
+      <line x1="90" y1="162" x2="105" y2="162"/><line x1="90" y1="166" x2="105" y2="166"/>
+    </g>
+
+    <!-- Петли крепления -->
+    <rect x="84" y="85" width="2.5" height="8" rx="1" fill="#4B3D36"/>
+    <rect x="84" y="152" width="2.5" height="8" rx="1" fill="#4B3D36"/>
+  </g>
+
+  <!-- ПОДОКОННИК С КРОНШТЕЙНАМИ -->
+  <!-- Опорные кронштейны -->
+  <path d="M25 183v10c4-2 6-6 6-10Z" fill="#93644B"/>
+  <path d="M85 183v10c-4-2-6-6-6-10Z" fill="#93644B"/>
+
+  <!-- Основная полка подоконника -->
+  <rect x="3" y="183" width="110" height="5" rx="1" fill="#000" opacity="0.1"/>
+  <rect x="3" y="174" width="110" height="8" rx="2.5" fill="#FFFFFF"/>
+  <rect x="3" y="179" width="110" height="3.5" rx="1.5" fill="#DFCBB8"/>
+  <line x1="4" y1="175" x2="112" y2="175" stroke="#FFF" stroke-width="1.2"/>
+
+  <!-- Уютные предметы на подоконнике -->
+  <!-- Кружка с паром -->
+  <g transform="translate(37, 162)">
+    <rect x="0" y="3" width="10" height="9" rx="2" fill="#E8826D"/>
+    <path d="M1 5q-4 2 0 5" fill="none" stroke="#E8826D" stroke-width="1.8" stroke-linecap="round"/>
+    <ellipse cx="5" cy="3" rx="5" ry="1.5" fill="#FFE1D6"/>
+    <ellipse cx="5" cy="3" rx="4" ry="1" fill="#7E472D"/>
+    <path d="M3 -1q2-3 0-5m4 5q2-3 0-5" fill="none" stroke="#FFFFFF" stroke-width="1.2" stroke-linecap="round" opacity="0.75"/>
+  </g>
+
+  <!-- Суккулент в горшочке -->
+  <g transform="translate(68, 161)">
+    <polygon points="2,8 12,8 10,13 4,13" fill="#D07C5B"/>
+    <rect x="1" y="6.5" width="12" height="2" rx="1" fill="#E49272"/>
+    <circle cx="7" cy="5" r="3.2" fill="#58A882"/>
+    <circle cx="4.5" cy="5.5" r="2.2" fill="#75C39F"/>
+    <circle cx="9.5" cy="5.5" r="2.2" fill="#4B9372"/>
+    <circle cx="7" cy="3.5" r="1.8" fill="#90DBB8"/>
+  </g>
+
+  <!-- Солнечный луч из прямоугольного окна -->
+  <polygon id="sunbeam" points="33,120 83,120 240,328 110,328" fill="url(#sunbeam-grad)"/>
+
+  <!-- ================= КРОВАТЬ В НИШЕ ================= -->
+  <!-- Тень от кровати -->
+  <ellipse cx="180" cy="265" rx="55" ry="12" fill="#000" opacity="0.12"/>
+
+  <!-- Изголовье -->
+  <rect x="126" y="172" width="108" height="60" rx="8" fill="#93644B"/>
+  <rect x="130" y="176" width="100" height="52" rx="5" fill="#AB7A5F"/>
+  <path d="M142 176v40M155 176v40M168 176v40M180 176v40M193 176v40M206 176v40M218 176v40" stroke="#93644B" stroke-width="2.5" stroke-linecap="round"/>
+
+  <!-- Каркас и матрас -->
+  <rect x="122" y="218" width="116" height="36" rx="8" fill="#ECEBF3"/>
+  <rect x="122" y="246" width="116" height="12" rx="4" fill="#885A41"/>
+  <rect x="128" y="254" width="8" height="12" rx="2" fill="#704732"/>
+  <rect x="224" y="254" width="8" height="12" rx="2" fill="#704732"/>
+
+  <!-- Подушки -->
+  <rect x="132" y="202" width="44" height="26" rx="6" fill="#F8E7D8" transform="rotate(-6 132 202)"/>
+  <rect x="180" y="200" width="44" height="26" rx="6" fill="#D9EBDC" transform="rotate(5 180 200)"/>
+  <rect x="156" y="214" width="46" height="17" rx="8.5" fill="#ECC3B2"/>
+
+  <!-- Плюшевый мишка -->
+  <g transform="translate(142, 198)">
+    <circle cx="0" cy="0" r="4" fill="#B48261"/><circle cx="0" cy="0" r="2" fill="#E8BBA0"/>
+    <circle cx="16" cy="0" r="4" fill="#B48261"/><circle cx="16" cy="0" r="2" fill="#E8BBA0"/>
+    <ellipse cx="8" cy="4" rx="9" ry="8" fill="#C59370"/>
+    <ellipse cx="8" cy="6" rx="4.5" ry="3.5" fill="#F5D7C3"/>
+    <circle cx="8" cy="5" r="1.5" fill="#523525"/>
+    <path d="M5 3q1.5-1.5 3 0M8 3q1.5-1.5 3 0" fill="none" stroke="#523525" stroke-width="1" stroke-linecap="round"/>
+  </g>
+
+  <!-- Одеяло со складками -->
+  <path d="M122 226c10-3 30-4 58-4s48 1 58 4v22c0 5-4 9-9 9h-98c-5 0-9-4-9-9Z" fill="#D97A66"/>
+  <path d="M122 226c12-3 32-4 58-4s46 1 58 4l-3 9c-14-3-32-4-55-4s-43 1-55 4Z" fill="#EFA291"/>
+  <path d="M140 236q20 18 38 4t44 6" fill="none" stroke="#C2634F" stroke-width="2.5" stroke-linecap="round"/>
+
+  <!-- ================= БОХО-КОВЁР ================= -->
+  <g transform="translate(180, 316)">
+    <ellipse cx="0" cy="4" rx="104" ry="25" fill="#000" opacity="0.08"/>
+    <ellipse cx="0" cy="0" rx="100" ry="24" fill="#69A897"/>
+    <ellipse cx="0" cy="0" rx="97" ry="23" fill="none" stroke="#4C8576" stroke-width="2" stroke-dasharray="3 3"/>
+    <ellipse cx="0" cy="0" rx="84" ry="19" fill="#E8F4F0"/>
+    <ellipse cx="0" cy="0" rx="72" ry="15" fill="#88C2B2"/>
+    <ellipse cx="0" cy="0" rx="58" ry="11" fill="#FFFBF5"/>
+    <path d="M-40 0q20-6 40 0t40 0" fill="none" stroke="#E59987" stroke-width="2.5"/>
+  </g>
+
+  <!-- ================= ПОЛОЧКА И КАРТИНА СПРАВА ================= -->
+  <g transform="translate(276, 92)">
+    <rect x="0" y="38" width="66" height="8" rx="2" fill="#000" opacity="0.08"/>
+    <rect x="2" y="34" width="64" height="6" rx="2" fill="#B37C56"/>
+    <path d="M12 40v10l8-10M52 40v10l-8-10" fill="none" stroke="#774E33" stroke-width="2"/>
+    <!-- Книги -->
+    <rect x="8" y="14" width="7" height="20" rx="1.5" fill="#E27462"/>
+    <rect x="17" y="10" width="8" height="24" rx="1.5" fill="#609AB9"/>
+    <rect x="27" y="16" width="6" height="18" rx="1.5" fill="#E7B958"/>
+    <rect x="34" y="19" width="6" height="15" rx="1.5" fill="#80B897" transform="rotate(14 34 19)"/>
+    <!-- Растение -->
+    <path d="M49 26h12l-2 8h-8Z" fill="#D38165"/>
+    <circle cx="55" cy="25" r="5" fill="#5A966E"/>
+    <path d="M52 32q-6 9-2 18m8-16q5 8 1 15m-4-10q2 6 6 12" fill="none" stroke="#487E5B" stroke-width="1.8" stroke-linecap="round"/>
+  </g>
+
+  <!-- Картина -->
+  <g transform="translate(290, 154)">
+    <rect x="0" y="2" width="42" height="48" rx="4" fill="#000" opacity="0.07"/>
+    <rect x="0" y="0" width="42" height="48" rx="4" fill="#93644B"/>
+    <rect x="3" y="3" width="36" height="42" rx="2" fill="#FFFFFF"/>
+    <circle cx="21" cy="18" r="6" fill="#FAD175"/>
+    <polygon points="8,40 18,24 28,40" fill="#75B5A1"/>
+    <polygon points="20,40 28,28 36,40" fill="#528F7C"/>
+    <path d="M5 8l28 28M12 5l22 22" stroke="#FFFFFF" stroke-width="1.5" opacity="0.6"/>
+  </g>
+
+  <!-- ================= БОЛЬШОЕ КАШПО СПРАВА ================= -->
+  <g transform="translate(294, 230)">
+    <ellipse cx="20" cy="72" rx="22" ry="7" fill="#000" opacity="0.14"/>
+    <path d="M11 58l-5 16M29 58l5 16M20 58v16" stroke="#855335" stroke-width="3" stroke-linecap="round"/>
+    <path d="M8 36h24l-3 26H11Z" fill="#E88F74"/>
+    <path d="M6 34h28v4H6Z" rx="2" fill="#F4A58E"/>
+    <line x1="14" y1="38" x2="13" y2="60" stroke="#D3755A" stroke-width="1.5"/>
+    <line x1="20" y1="38" x2="20" y2="61" stroke="#D3755A" stroke-width="1.5"/>
+    <line x1="26" y1="38" x2="27" y2="60" stroke="#D3755A" stroke-width="1.5"/>
+    <!-- Листья монстеры -->
+    <path d="M20 35Q18 10 7 2M20 35Q22 8 36 0M20 35V-6" fill="none" stroke="#2B6B4C" stroke-width="3" stroke-linecap="round"/>
+    <path d="M7 2c-12 2-18 14-8 20 8 5 18-5 12-18Z" fill="#3D8963"/>
+    <path d="M9 7c-4 3-5 9-1 12" fill="none" stroke="#68AB87" stroke-width="1.2"/>
+    <path d="M36 0c12 2 17 14 7 20-8 5-17-5-11-18Z" fill="#4AA074"/>
+    <path d="M34 5c4 3 5 9 1 12" fill="none" stroke="#79BE99" stroke-width="1.2"/>
+    <path d="M20-8c-10-10-18 2-6 16 8 8 18 2 15-8Z" fill="#56B282"/>
+    <path d="M21-4c-2 6-4 9-2 12" fill="none" stroke="#84CFA8" stroke-width="1.2"/>
+  </g>
+
+  <!-- Искорки света в воздухе -->
+  <g fill="#FFFFFF" opacity="0.65">
+    <circle cx="70" cy="155" r="1"/>
+    <circle cx="95" cy="180" r="1.2"/>
+    <circle cx="130" cy="220" r="1.5"/>
+    <circle cx="155" cy="265" r="1.2"/>
+    <circle cx="185" cy="290" r="1.4"/>
+    <circle cx="115" cy="250" r="0.8"/>
+  </g>
+  <!-- Купленные предметы появляются только после покупки. -->
+  <g id="room-bed" style="display:none"><ellipse cx="48" cy="306" rx="42" ry="18" fill="#A694B9"/><ellipse cx="48" cy="301" rx="35" ry="12" fill="#E5D7EA"/><path d="M28 298q17-7 36 0" fill="none" stroke="#F9EFFA" stroke-width="3"/></g>
+  <g id="room-bed-sparkle" style="display:none"><path d="m46 266 4 9 9 4-9 4-4 9-4-9-9-4 9-4z" fill="#FFF3AF"/><circle cx="66" cy="274" r="3" fill="#FFF3AF"/></g>
+  <g id="room-lamp-glow" style="display:none"><ellipse cx="273" cy="214" rx="34" ry="29" fill="#FFE59F" opacity=".4"/></g>
+  <g id="room-lamp" style="display:none"><path d="M273 286v-68" stroke="#9D775F" stroke-width="5"/><ellipse cx="273" cy="287" rx="18" ry="4" fill="#9D775F"/><path d="M255 214q0-25 18-25t18 25Z" fill="#FFDC91"/><path d="M259 212q14-9 28 0" fill="none" stroke="#FFF1C3" stroke-width="3"/></g>
+  <g id="room-ball" style="display:none"><circle cx="88" cy="286" r="17" fill="#F7F3E9" stroke="#C76761" stroke-width="3"/><path d="M72 281q17-7 32 4M84 269q-6 19 12 30" fill="none" stroke="#4E9B85" stroke-width="5"/><circle cx="88" cy="286" r="5" fill="#E6A755"/></g>
+  <g id="room-robot" style="display:none"><rect x="226" y="262" width="36" height="34" rx="9" fill="#83B9C5" stroke="#4C7891" stroke-width="3"/><rect x="230" y="242" width="28" height="24" rx="7" fill="#A7D4D9" stroke="#4C7891" stroke-width="3"/><circle cx="238" cy="253" r="3" fill="#3A526D"/><circle cx="250" cy="253" r="3" fill="#3A526D"/><path d="M237 277h14M244 241v-8M232 296l-4 7m28-7 4 7" stroke="#4C7891" stroke-width="4" stroke-linecap="round"/><circle cx="244" cy="231" r="4" fill="#F2BD69"/></g>
+  <g id="room-kite" style="display:none"><path d="M295 53l20 23-20 27-20-27Z" fill="#E88982" stroke="#9A627E" stroke-width="3"/><path d="M295 53v50m-20-27h40" stroke="#FFE5A5" stroke-width="3"/><path d="M295 103q-12 13 0 25t-3 25" fill="none" stroke="#9A627E" stroke-width="3"/><path d="m291 116-9 2 6 6m9 5 8 2-5 6m-12 5-8 3 7 5" fill="#F3C66E"/></g>
+</svg>

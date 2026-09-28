@@ -43,10 +43,10 @@ class _ShopModalState extends ConsumerState<ShopModal> {
             _Header(
               balance: state.balance,
               title: _lastPurchased != null
-                  ? 'Покупка готова!'
+                  ? 'Готово!'
                   : _selected == null
-                  ? 'Лавка Финни'
-                  : 'Перед покупкой',
+                  ? 'Лавка'
+                  : 'Покупка',
               back: () => _selected == null && _lastPurchased == null
                   ? Navigator.of(context).pop()
                   : setState(() {
@@ -81,7 +81,9 @@ class _ShopModalState extends ConsumerState<ShopModal> {
           child: Align(
             alignment: Alignment.centerLeft,
             child: Text(
-              'Сравни цену и пользу перед выбором',
+              state.balanceStats.satiety <= 2
+                  ? 'Финни голоден. Пополни кладовку и выбери еду на карточке.'
+                  : 'Вещи из лавки дают новые действия в комнате.',
               style: _text(14, FontWeight.w600, FinnyColors.textSecondary),
             ),
           ),
@@ -157,6 +159,7 @@ class _ShopModalState extends ConsumerState<ShopModal> {
                     return _ItemCard(
                       key: Key('shop-item-${item.id}'),
                       item: item,
+                      petName: state.profile.petName,
                       owned: _owned(state, item),
                       onTap: () => setState(() {
                         _selected = item;
@@ -172,8 +175,8 @@ class _ShopModalState extends ConsumerState<ShopModal> {
 
   Widget _purchase(GameState state, ShopItem item) {
     final balance = state.balance;
-    final missing = (item.price - balance).clamp(0, item.price);
     final owned = _owned(state, item);
+    final missing = owned ? 0 : (item.price - balance).clamp(0, item.price);
     final alternatives = kShopCatalog
         .where(
           (candidate) =>
@@ -183,7 +186,7 @@ class _ShopModalState extends ConsumerState<ShopModal> {
         )
         .toList();
     final note = owned
-        ? 'Эта вещь уже есть у Финни. Второй раз платить не нужно.'
+        ? 'Эта вещь уже есть в домике. Второй раз платить не нужно.'
         : missing > 0
         ? alternatives.isNotEmpty
               ? 'Можно выбрать вещь по карману или отложить покупку.'
@@ -218,8 +221,6 @@ class _ShopModalState extends ConsumerState<ShopModal> {
                     ),
                     Text(
                       item.name,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
                       style: _text(
                         20,
                         FontWeight.w900,
@@ -227,7 +228,7 @@ class _ShopModalState extends ConsumerState<ShopModal> {
                       ),
                     ),
                     Text(
-                      '${item.price} монет',
+                      '${item.price} 🪙',
                       style: _text(
                         17,
                         FontWeight.w800,
@@ -242,10 +243,12 @@ class _ShopModalState extends ConsumerState<ShopModal> {
           const SizedBox(height: 12),
           _Info(
             Icons.auto_awesome_rounded,
-            '${item.immediateEffect} ${item.practicalUse}',
+            '${item.immediateEffect} ${item.practicalUse}'.replaceAll(
+              'Финни',
+              state.profile.petName,
+            ),
             _categoryColor(item.category),
             _categoryColor(item.category).withValues(alpha: .09),
-            maxLines: 3,
           ),
           const SizedBox(height: 12),
           Container(
@@ -257,11 +260,11 @@ class _ShopModalState extends ConsumerState<ShopModal> {
             ),
             child: Column(
               children: [
-                _MoneyRow('В кошельке', '$balance монет'),
+                _MoneyRow('В кошельке', '$balance 🪙'),
                 const SizedBox(height: 7),
                 _MoneyRow(
                   'Потратим',
-                  '− ${item.price} монет',
+                  owned ? '0 🪙' : '− ${item.price} 🪙',
                   color: _expenseColor,
                   bold: true,
                 ),
@@ -272,8 +275,8 @@ class _ShopModalState extends ConsumerState<ShopModal> {
                 _MoneyRow(
                   missing == 0 ? 'Останется' : 'Не хватает',
                   missing == 0
-                      ? '${balance - item.price} монет'
-                      : '$missing ${_coins(missing)}',
+                      ? '${owned ? balance : balance - item.price} 🪙'
+                      : '$missing 🪙',
                   color: missing == 0 ? FinnyColors.textPrimary : _expenseColor,
                   bold: true,
                 ),
@@ -290,7 +293,6 @@ class _ShopModalState extends ConsumerState<ShopModal> {
             owned || missing == 0
                 ? const Color(0xFFE9F8EF)
                 : const Color(0xFFFFF3DE),
-            maxLines: 3,
           ),
         ],
       ),
@@ -298,11 +300,7 @@ class _ShopModalState extends ConsumerState<ShopModal> {
 
     return Column(
       children: [
-        Expanded(
-          child: MediaQuery.textScalerOf(context).scale(1) > 1.2
-              ? SingleChildScrollView(child: details)
-              : details,
-        ),
+        Expanded(child: SingleChildScrollView(child: details)),
         Container(
           padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
           decoration: const BoxDecoration(
@@ -343,7 +341,7 @@ class _ShopModalState extends ConsumerState<ShopModal> {
                               _lastPurchased = item;
                               _balanceBeforePurchase = balance;
                               _receipt =
-                                  'Покупка: ${item.name}. Было $balance, осталось $left ${_coins(left)}.';
+                                  'Покупка: ${item.name}. Было $balance 🪙, осталось $left 🪙.';
                             });
                           }
                         : alternatives.isNotEmpty
@@ -370,8 +368,8 @@ class _ShopModalState extends ConsumerState<ShopModal> {
         state.settings.animationsEnabled &&
         !MediaQuery.disableAnimationsOf(context);
     final effect = item.foodDaysProvided > 0
-        ? 'Теперь еды хватит на ${state.inventory.foodReserveDays} дн.'
-        : item.immediateEffect;
+        ? 'В кладовке ${state.inventory.foodReserveDays} порций еды.'
+        : item.immediateEffect.replaceAll('Финни', state.profile.petName);
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
       child: Column(
@@ -426,7 +424,7 @@ class _ShopModalState extends ConsumerState<ShopModal> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Финни получил ${item.name}!',
+                      'Покупка: ${item.name}!',
                       textAlign: TextAlign.center,
                       style: _text(
                         22,
@@ -459,13 +457,13 @@ class _ShopModalState extends ConsumerState<ShopModal> {
                         children: [
                           _MoneyRow(
                             'Потратили',
-                            '−${item.price} монет',
+                            '−${item.price} 🪙',
                             bold: true,
                             color: _expenseColor,
                           ),
                           const SizedBox(height: 7),
                           Text(
-                            'Было $before, осталось ${state.balance} ${_coins(state.balance)}.',
+                            'Было $before 🪙, осталось ${state.balance} 🪙.',
                             style: _text(
                               14,
                               FontWeight.w800,
@@ -534,11 +532,13 @@ class _Header extends StatelessWidget {
         ),
         const SizedBox(width: 4),
         Expanded(
-          child: Text(
-            title,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: _text(20, FontWeight.w900, FinnyColors.textPrimary),
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              title,
+              style: _text(20, FontWeight.w900, FinnyColors.textPrimary),
+            ),
           ),
         ),
         const SizedBox(width: 8),
@@ -549,7 +549,7 @@ class _Header extends StatelessWidget {
             borderRadius: BorderRadius.circular(14),
           ),
           child: Text(
-            '$balance мон.',
+            '$balance 🪙',
             style: _text(15, FontWeight.w900, const Color(0xFF795000)),
           ),
         ),
@@ -601,10 +601,12 @@ class _ItemCard extends StatelessWidget {
   const _ItemCard({
     super.key,
     required this.item,
+    required this.petName,
     required this.owned,
     required this.onTap,
   });
   final ShopItem item;
+  final String petName;
   final bool owned;
   final VoidCallback onTap;
 
@@ -635,8 +637,6 @@ class _ItemCard extends StatelessWidget {
                       Expanded(
                         child: Text(
                           item.name,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
                           style: _text(
                             16,
                             FontWeight.w900,
@@ -646,7 +646,7 @@ class _ItemCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        owned ? 'Есть' : '${item.price} мон.',
+                        owned ? 'Есть' : '${item.price} 🪙',
                         style: _text(
                           14,
                           FontWeight.w900,
@@ -668,9 +668,7 @@ class _ItemCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 5),
                   Text(
-                    item.immediateEffect,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                    item.practicalUse.replaceAll('Финни', petName),
                     style: _text(
                       13,
                       FontWeight.w600,
@@ -702,9 +700,75 @@ class _Art extends StatelessWidget {
         color: color.withValues(alpha: .11),
         borderRadius: BorderRadius.circular(size * .25),
       ),
-      child: Icon(_itemIcon(item.id), color: color, size: size * .52),
+      child: Center(
+        child: item.id == 'raincoat'
+            ? CustomPaint(
+                size: Size.square(size * .65),
+                painter: const _RaincoatPainter(),
+              )
+            : Text(
+                item.icon,
+                textAlign: TextAlign.center,
+                style: TextStyle(fontSize: size * .53, height: 1),
+              ),
+      ),
     );
   }
+}
+
+class _RaincoatPainter extends CustomPainter {
+  const _RaincoatPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.scale(size.width / 100, size.height / 100);
+    final outline = Paint()
+      ..color = const Color(0xFFA86B1D)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3
+      ..strokeJoin = StrokeJoin.round;
+    final hood = Path()
+      ..moveTo(37, 24)
+      ..quadraticBezierTo(50, 1, 63, 24)
+      ..lineTo(60, 33)
+      ..quadraticBezierTo(50, 27, 40, 33)
+      ..close();
+    canvas.drawPath(hood, Paint()..color = const Color(0xFFFFE68C));
+    canvas.drawPath(hood, outline);
+
+    final coat = Path()
+      ..moveTo(31, 28)
+      ..lineTo(41, 25)
+      ..lineTo(50, 35)
+      ..lineTo(59, 25)
+      ..lineTo(69, 28)
+      ..lineTo(91, 65)
+      ..lineTo(77, 72)
+      ..lineTo(69, 56)
+      ..lineTo(69, 89)
+      ..lineTo(31, 89)
+      ..lineTo(31, 56)
+      ..lineTo(23, 72)
+      ..lineTo(9, 65)
+      ..close();
+    canvas.drawPath(coat, Paint()..color = const Color(0xFFF5C94B));
+    canvas.drawPath(coat, outline);
+    canvas.drawLine(
+      const Offset(50, 35),
+      const Offset(50, 88),
+      outline..strokeWidth = 2.5,
+    );
+    for (final x in [38.0, 62.0]) {
+      canvas.drawLine(
+        Offset(x - 4, 66),
+        Offset(x + 4, 70),
+        outline..strokeWidth = 2.5,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _MoneyRow extends StatelessWidget {
@@ -739,18 +803,11 @@ class _MoneyRow extends StatelessWidget {
 }
 
 class _Info extends StatelessWidget {
-  const _Info(
-    this.icon,
-    this.message,
-    this.color,
-    this.background, {
-    this.maxLines,
-  });
+  const _Info(this.icon, this.message, this.color, this.background);
   final IconData icon;
   final String message;
   final Color color;
   final Color background;
-  final int? maxLines;
   @override
   Widget build(BuildContext context) => Container(
     width: double.infinity,
@@ -767,8 +824,6 @@ class _Info extends StatelessWidget {
         Expanded(
           child: Text(
             message,
-            maxLines: maxLines,
-            overflow: maxLines == null ? null : TextOverflow.ellipsis,
             style: _text(14, FontWeight.w700, FinnyColors.textPrimary),
           ),
         ),
@@ -794,13 +849,15 @@ class _Action extends StatelessWidget {
         side: primary ? null : const BorderSide(color: FinnyColors.border),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
       ),
-      child: Text(
-        label,
-        maxLines: 1,
-        style: _text(
-          15,
-          FontWeight.w900,
-          primary ? Colors.white : FinnyColors.textPrimary,
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Text(
+          label,
+          style: _text(
+            15,
+            FontWeight.w900,
+            primary ? Colors.white : FinnyColors.textPrimary,
+          ),
         ),
       ),
     ),
@@ -826,26 +883,4 @@ Color _categoryColor(ItemCategory category) => switch (category) {
   ItemCategory.reserve => const Color(0xFF3473AA),
   ItemCategory.want => const Color(0xFFB66045),
   ItemCategory.useful => FinnyColors.primaryDark,
-};
-
-String _coins(int count) {
-  if (count % 100 ~/ 10 != 1) {
-    if (count % 10 == 1) return 'монета';
-    if (count % 10 >= 2 && count % 10 <= 4) return 'монеты';
-  }
-  return 'монет';
-}
-
-IconData _itemIcon(String id) => switch (id) {
-  'food_1' => Icons.ramen_dining_rounded,
-  'food_3' => Icons.shopping_basket_rounded,
-  'food_5' => Icons.inventory_2_rounded,
-  'raincoat' => Icons.umbrella_rounded,
-  'repair_kit' => Icons.handyman_rounded,
-  'toy_ball' => Icons.sports_soccer_rounded,
-  'toy_robot' => Icons.smart_toy_rounded,
-  'cozy_bed' => Icons.bed_rounded,
-  'warm_lamp' => Icons.lightbulb_rounded,
-  'kite' => Icons.air_rounded,
-  _ => Icons.shopping_bag_rounded,
 };

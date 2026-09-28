@@ -45,154 +45,159 @@ class RoomSceneWidget extends StatelessWidget {
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(FinnyRadius.xl - 1),
-        child: LayoutBuilder(builder: (context, constraints) => Stack(
-          alignment: Alignment.center,
-          children: [
-            // 1. Чистый градиентный фон — стена
-            Positioned.fill(
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: hasLamp
-                        ? [const Color(0xFFFFF9F0), const Color(0xFFFFF3E0)]
-                        : [const Color(0xFFF8FAFC), const Color(0xFFF1F5F9)],
-                  ),
-                ),
-              ),
-            ),
-
-            // 2. Мягкий «пол» — горизонтальная полоска внизу
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              height: 80,
-              child: Container(
-                decoration: BoxDecoration(
-                  color: FinnyColors.surfaceMuted,
-                  border: Border(
-                    top: BorderSide(color: FinnyColors.border, width: 1),
-                  ),
-                ),
-              ),
-            ),
-
-            // 3. Мягкий коврик
-            Positioned(
-              bottom: 12,
-              child: Container(
-                width: 200,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: FinnyColors.primary.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(40),
-                  border: Border.all(
-                    color: FinnyColors.primary.withValues(alpha: 0.15),
-                    width: 1,
-                  ),
-                ),
-              ),
-            ),
-
-            // 4. Окно — простой контейнер с погодой
-            Positioned(
-              top: 16,
-              left: 20,
-              child: _MinimalWindow(forecast: state.forecast),
-            ),
-
-            // 5. Мечта — маленький бейдж
-            Positioned(
-              top: 16,
-              right: 20,
-              child: _DreamIcon(goalId: state.goal.goalId),
-            ),
-
-            // 6. Предметы интерьера — чистые маленькие элементы
-            if (hasBed)
-              const Positioned(
-                left: 18,
-                bottom: 34,
-                child: _RoomItem(emoji: '🛏️', label: 'Уют'),
-              ),
-            if (hasLamp)
-              Positioned(
-                right: 20,
-                bottom: 60,
+        child: LayoutBuilder(
+          builder: (context, constraints) => Stack(
+            alignment: Alignment.center,
+            children: [
+              // 1. Чистый градиентный фон — стена
+              Positioned.fill(
                 child: Container(
-                  padding: const EdgeInsets.all(6),
                   decoration: BoxDecoration(
-                    color: Colors.amber.withValues(alpha: 0.15),
-                    shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: hasLamp
+                          ? [const Color(0xFFFFF9F0), const Color(0xFFFFF3E0)]
+                          : [const Color(0xFFF8FAFC), const Color(0xFFF1F5F9)],
+                    ),
                   ),
-                  child: const Text('💡', style: TextStyle(fontSize: 20)),
                 ),
               ),
-            if (hasBall)
-              const Positioned(
-                left: 60,
-                bottom: 16,
-                child: Text('⚽', style: TextStyle(fontSize: 20)),
-              ),
-            if (hasRobot)
-              const Positioned(
-                right: 60,
-                bottom: 16,
-                child: Text('🤖', style: TextStyle(fontSize: 20)),
-              ),
-            if (hasKite)
-              const Positioned(
-                left: 20,
-                bottom: 86,
-                child: Text('🪁', style: TextStyle(fontSize: 20)),
-              ),
-            if (hasTools)
-              const Positioned(
-                right: 20,
-                bottom: 86,
-                child: Text('🧰', style: TextStyle(fontSize: 18)),
-              ),
 
-            // 7. Миска — компактный бейдж
-            Positioned(
-              right: 18,
-              bottom: 14,
-              child: _FoodIndicator(daysRemaining: foodDays),
-            ),
-
-            // 8. Финни — центр
-            Positioned(
-              bottom: 24,
-              child: PetAvatarWidget(
-                mood: state.finny.mood,
-                size: ((constraints.maxHeight - 105).clamp(120.0, 310.0) / 1.125).clamp(100.0, constraints.maxWidth - 48),
-                hasRaincoat: hasRaincoat,
-                onTap: onPetTap,
-              ),
-            ),
-
-            if (onWardrobeTap != null)
+              // 2. Мягкий «пол» — горизонтальная полоска внизу
               Positioned(
-                left: 8,
-                bottom: 8,
-                child: IconButton.filledTonal(
-                  tooltip: 'Гардероб',
-                  onPressed: onWardrobeTap,
-                  icon: const Icon(Icons.checkroom_rounded),
+                left: 0,
+                right: 0,
+                bottom: 0,
+                height: 80,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: FinnyColors.surfaceMuted,
+                    border: Border(
+                      top: BorderSide(color: FinnyColors.border, width: 1),
+                    ),
+                  ),
                 ),
               ),
-            // 9. Облачко мыслей
-            Positioned(
-              top: 8,
-              child: _SpeechBubble(
-                message: state.finny.moodReason,
-                mood: state.finny.mood,
-              ).animate().fadeIn(duration: 600.ms).slideY(begin: -0.15),
-            ),
-          ],
-        )),
+
+              // 3. Мягкий коврик
+              Positioned(
+                bottom: 12,
+                child: Container(
+                  width: 200,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: FinnyColors.primary.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(40),
+                    border: Border.all(
+                      color: FinnyColors.primary.withValues(alpha: 0.15),
+                      width: 1,
+                    ),
+                  ),
+                ),
+              ),
+
+              // 4. Окно — простой контейнер с погодой
+              Positioned(
+                top: 16,
+                left: 20,
+                child: _MinimalWindow(forecast: state.forecast),
+              ),
+
+              // 5. Мечта — маленький бейдж
+              Positioned(
+                top: 16,
+                right: 20,
+                child: _DreamIcon(goalId: state.goal.goalId),
+              ),
+
+              // 6. Предметы интерьера — чистые маленькие элементы
+              if (hasBed)
+                const Positioned(
+                  left: 18,
+                  bottom: 34,
+                  child: _RoomItem(emoji: '🛏️', label: 'Уют'),
+                ),
+              if (hasLamp)
+                Positioned(
+                  right: 20,
+                  bottom: 60,
+                  child: Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.withValues(alpha: 0.15),
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Text('💡', style: TextStyle(fontSize: 20)),
+                  ),
+                ),
+              if (hasBall)
+                const Positioned(
+                  left: 60,
+                  bottom: 16,
+                  child: Text('⚽', style: TextStyle(fontSize: 20)),
+                ),
+              if (hasRobot)
+                const Positioned(
+                  right: 60,
+                  bottom: 16,
+                  child: Text('🤖', style: TextStyle(fontSize: 20)),
+                ),
+              if (hasKite)
+                const Positioned(
+                  left: 20,
+                  bottom: 86,
+                  child: Text('🪁', style: TextStyle(fontSize: 20)),
+                ),
+              if (hasTools)
+                const Positioned(
+                  right: 20,
+                  bottom: 86,
+                  child: Text('🧰', style: TextStyle(fontSize: 18)),
+                ),
+
+              // 7. Миска — компактный бейдж
+              Positioned(
+                right: 18,
+                bottom: 14,
+                child: _FoodIndicator(daysRemaining: foodDays),
+              ),
+
+              // 8. Финни — центр
+              Positioned(
+                bottom: 24,
+                child: PetAvatarWidget(
+                  mood: state.finny.mood,
+                  size:
+                      ((constraints.maxHeight - 105).clamp(120.0, 310.0) /
+                              1.125)
+                          .clamp(100.0, constraints.maxWidth - 48),
+                  hasRaincoat: hasRaincoat,
+                  onTap: onPetTap,
+                ),
+              ),
+
+              if (onWardrobeTap != null)
+                Positioned(
+                  left: 8,
+                  bottom: 8,
+                  child: IconButton.filledTonal(
+                    tooltip: 'Гардероб',
+                    onPressed: onWardrobeTap,
+                    icon: const Icon(Icons.checkroom_rounded),
+                  ),
+                ),
+              // 9. Облачко мыслей
+              Positioned(
+                top: 8,
+                child: _SpeechBubble(
+                  message: state.finny.moodReason,
+                  mood: state.finny.mood,
+                ).animate().fadeIn(duration: 600.ms).slideY(begin: -0.15),
+              ),
+            ],
+          ),
+        ),
       ),
     ).animate().fadeIn(duration: 500.ms).scale(begin: const Offset(0.97, 0.97));
   }
@@ -381,8 +386,6 @@ class _SpeechBubble extends StatelessWidget {
       child: Text(
         message,
         textAlign: TextAlign.center,
-        maxLines: 2,
-        overflow: TextOverflow.ellipsis,
         style: GoogleFonts.nunito(
           fontSize: 12,
           fontWeight: FontWeight.w600,

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:gap/gap.dart';
 
@@ -8,6 +7,7 @@ import '../../core/theme/finny_widgets.dart';
 import '../../game/content/financial_tasks.dart';
 import '../../game/engine/game_engine.dart';
 import '../../shared/widgets/finny_appearance.dart';
+import '../../shared/widgets/conditional_motion.dart';
 
 class AdultScreen extends ConsumerStatefulWidget {
   const AdultScreen({super.key});
@@ -33,7 +33,7 @@ class AdultScreen extends ConsumerStatefulWidget {
       builder: (ctx) => AlertDialog(
         title: Row(
           children: [
-            const Icon(Icons.shield_rounded, color: FinnyColors.primary),
+            Icon(Icons.shield_rounded, color: FinnyColors.primary),
             const Gap(8),
             Text(
               'Для родителей',
@@ -113,6 +113,9 @@ class _AdultScreenState extends ConsumerState<AdultScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(gameEngineProvider);
+    final motion =
+        state.settings.animationsEnabled &&
+        !MediaQuery.disableAnimationsOf(context);
     bool did(String taskId) =>
         state.completedTasks.any((task) => task.taskId == taskId);
     final everSaved =
@@ -150,7 +153,7 @@ class _AdultScreenState extends ConsumerState<AdultScreen> {
                 children: [
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.school_rounded,
                         color: FinnyColors.primary,
                         size: 22,
@@ -182,7 +185,7 @@ class _AdultScreenState extends ConsumerState<AdultScreen> {
                   ),
                 ],
               ),
-            ).animate().fadeIn(duration: 400.ms),
+            ).fadeInWhen(motion, duration: const Duration(milliseconds: 400)),
             const Gap(12),
 
             // Навыки
@@ -229,7 +232,11 @@ class _AdultScreenState extends ConsumerState<AdultScreen> {
                   ),
                 ],
               ),
-            ).animate().fadeIn(duration: 400.ms, delay: 100.ms),
+            ).fadeInWhen(
+              motion,
+              duration: const Duration(milliseconds: 400),
+              delay: const Duration(milliseconds: 100),
+            ),
             const Gap(12),
 
             FinnyCard(
@@ -298,21 +305,25 @@ class _AdultScreenState extends ConsumerState<AdultScreen> {
                   Material(
                     color: Colors.transparent,
                     child: SwitchListTile(
-                    title: Text(
-                      'Анимация Финни',
-                      style: TextStyle(fontFamily: 'Nunito', fontSize: 14),
-                    ),
-                    value: state.settings.animationsEnabled,
-                    activeTrackColor: FinnyColors.primary,
-                    contentPadding: EdgeInsets.zero,
-                    onChanged: ref
-                        .read(gameEngineProvider.notifier)
-                        .setAvatarAnimations,
+                      title: Text(
+                        'Анимация Финни',
+                        style: TextStyle(fontFamily: 'Nunito', fontSize: 14),
+                      ),
+                      value: state.settings.animationsEnabled,
+                      activeTrackColor: FinnyColors.primary,
+                      contentPadding: EdgeInsets.zero,
+                      onChanged: ref
+                          .read(gameEngineProvider.notifier)
+                          .setAvatarAnimations,
                     ),
                   ),
                 ],
               ),
-            ).animate().fadeIn(duration: 400.ms, delay: 200.ms),
+            ).fadeInWhen(
+              motion,
+              duration: const Duration(milliseconds: 400),
+              delay: const Duration(milliseconds: 200),
+            ),
             const Gap(20),
 
             // Сброс

@@ -4,8 +4,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-final finnyAppearanceProvider =
-    ChangeNotifierProvider((ref) => FinnyAppearance());
+final finnyAppearanceProvider = ChangeNotifierProvider(
+  (ref) => FinnyAppearance(),
+);
 
 class FinnyAppearance extends ChangeNotifier {
   static const _mainKey = 'finny_appearance_v1';
@@ -15,6 +16,7 @@ class FinnyAppearance extends ChangeNotifier {
     'original': 'Лесная магия',
     'lagoon': 'Лагуна',
     'apricot': 'Абрикос',
+    'custom': 'Свой окрас',
   };
   static const jackets = {
     'none': 'Без куртки',
@@ -29,6 +31,10 @@ class FinnyAppearance extends ChangeNotifier {
   };
 
   String palette = 'original', jacket = 'none', hat = 'none';
+  Color furColor = const Color(0xFF8549E8);
+  Color tuftColor = const Color(0xFFA7E75B);
+  Color bellyColor = const Color(0xFFF1E4FF);
+  Color eyeColor = const Color(0xFF83C945);
   bool glasses = false, bow = false, _edited = false, _disposed = false;
   bool _demoActive = false;
   Future<void> _writes = Future<void>.value();
@@ -45,14 +51,25 @@ class FinnyAppearance extends ChangeNotifier {
     hat = 'none';
     glasses = false;
     bow = false;
+    furColor = const Color(0xFF8549E8);
+    tuftColor = const Color(0xFFA7E75B);
+    bellyColor = const Color(0xFFF1E4FF);
+    eyeColor = const Color(0xFF83C945);
     try {
-      final data = jsonDecode(prefs.getString(_activeKey) ?? '{}')
-          as Map<String, dynamic>;
+      final data = jsonDecode(
+        prefs.getString(_activeKey) ?? '{}',
+      ) as Map<String, dynamic>;
       if (palettes.containsKey(data['palette'])) palette = data['palette'];
       if (jackets.containsKey(data['jacket'])) jacket = data['jacket'];
       if (hats.containsKey(data['hat'])) hat = data['hat'];
       glasses = data['glasses'] == true;
       bow = data['bow'] == true;
+      if (data['furColor'] is int) furColor = Color(data['furColor'] as int);
+      if (data['tuftColor'] is int) tuftColor = Color(data['tuftColor'] as int);
+      if (data['bellyColor'] is int) {
+        bellyColor = Color(data['bellyColor'] as int);
+      }
+      if (data['eyeColor'] is int) eyeColor = Color(data['eyeColor'] as int);
     } catch (_) {
       // Invalid cosmetic data does not affect game progress.
     }
@@ -86,6 +103,10 @@ class FinnyAppearance extends ChangeNotifier {
     String? hat,
     bool? glasses,
     bool? bow,
+    Color? furColor,
+    Color? tuftColor,
+    Color? bellyColor,
+    Color? eyeColor,
   }) {
     _edited = true;
     if (palettes.containsKey(palette)) this.palette = palette!;
@@ -93,6 +114,16 @@ class FinnyAppearance extends ChangeNotifier {
     if (hats.containsKey(hat)) this.hat = hat!;
     this.glasses = glasses ?? this.glasses;
     this.bow = bow ?? this.bow;
+    if (furColor != null ||
+        tuftColor != null ||
+        bellyColor != null ||
+        eyeColor != null) {
+      this.palette = 'custom';
+    }
+    this.furColor = furColor ?? this.furColor;
+    this.tuftColor = tuftColor ?? this.tuftColor;
+    this.bellyColor = bellyColor ?? this.bellyColor;
+    this.eyeColor = eyeColor ?? this.eyeColor;
     notifyListeners();
     final encoded = jsonEncode({
       'palette': this.palette,
@@ -100,6 +131,10 @@ class FinnyAppearance extends ChangeNotifier {
       'hat': this.hat,
       'glasses': this.glasses,
       'bow': this.bow,
+      'furColor': this.furColor.toARGB32(),
+      'tuftColor': this.tuftColor.toARGB32(),
+      'bellyColor': this.bellyColor.toARGB32(),
+      'eyeColor': this.eyeColor.toARGB32(),
     });
     final key = _activeKey;
     _writes = _writes.catchError((Object _) {}).then((_) async {
@@ -110,6 +145,7 @@ class FinnyAppearance extends ChangeNotifier {
     });
     return _writes;
   }
+
   Future<void> reset() {
     _edited = true;
     palette = 'original';
@@ -117,6 +153,10 @@ class FinnyAppearance extends ChangeNotifier {
     hat = 'none';
     glasses = false;
     bow = false;
+    furColor = const Color(0xFF8549E8);
+    tuftColor = const Color(0xFFA7E75B);
+    bellyColor = const Color(0xFFF1E4FF);
+    eyeColor = const Color(0xFF83C945);
     notifyListeners();
     final key = _activeKey;
     _writes = _writes.catchError((Object _) {}).then((_) async {

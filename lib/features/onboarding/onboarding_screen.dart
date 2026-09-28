@@ -8,8 +8,8 @@ import '../../game/engine/game_engine.dart';
 import '../../shared/widgets/finny_appearance.dart';
 import '../../shared/widgets/pet_avatar_widget.dart';
 
-/// A reversible lesson with twelve pretend coins, before the real game begins.
-enum _Trial { choose, toyFirst, foodFirst, saved }
+/// One safe practice decision before the real game begins.
+enum _Trial { choose, worked, rested }
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -58,15 +58,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       });
       return;
     }
-    if (_trial == _Trial.toyFirst) {
-      setState(() => _trial = _Trial.choose);
-      return;
-    }
-    if (_trial == _Trial.foodFirst) {
-      setState(() => _trial = _Trial.saved);
-      return;
-    }
-    if (_trial != _Trial.saved) return;
+    if (_trial == _Trial.choose) return;
     if (!ref
         .read(gameEngineProvider.notifier)
         .completeOnboarding(_name.text.trim(), _goalId)) {
@@ -77,18 +69,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   String get _actionLabel {
     if (_step == 0) return _greeted ? 'Продолжить' : 'Поздороваться';
     if (_step < 3) return 'Продолжить';
-    return switch (_trial) {
-      _Trial.choose => 'Выбери, что купить',
-      _Trial.toyFirst => 'Попробовать иначе',
-      _Trial.foodFirst => 'Отложить 5 на мечту',
-      _Trial.saved => 'Начать настоящий день',
-    };
+    return _trial == _Trial.choose ? 'Выбери действие' : 'Начать игру';
   }
 
   @override
   Widget build(BuildContext context) {
     final look = ref.watch(finnyAppearanceProvider);
-    final keyboardOpen = MediaQuery.viewInsetsOf(context).bottom > 0;
     return Scaffold(
       backgroundColor: FinnyColors.background,
       body: SafeArea(
@@ -133,7 +119,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                     decoration: BoxDecoration(
                                       color: index <= _step
                                           ? FinnyColors.primary
-                                          : const Color(0xFFE5DCEE),
+                                          : FinnyColors.border,
                                       borderRadius: BorderRadius.circular(20),
                                     ),
                                   ),
@@ -158,7 +144,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                       Expanded(
                         child: switch (_step) {
                           0 => _welcome(compact),
-                          1 => _appearance(compact, keyboardOpen, look),
+                          1 => _appearance(compact, look),
                           2 => _goal(compact),
                           _ => _lesson(compact),
                         },
@@ -183,7 +169,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                                 : _next,
                             style: FilledButton.styleFrom(
                               backgroundColor: FinnyColors.primary,
-                              disabledBackgroundColor: const Color(0xFFD9CDE9),
+                              disabledBackgroundColor: FinnyColors.border,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(18),
                               ),
@@ -217,57 +203,55 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       Expanded(
         child: _AvatarStage(
           child: LayoutBuilder(
-            builder: (context, box) => PetAvatarWidget(
-              mood: FinnyMood.happy,
-              size: (box.maxHeight * .78).clamp(135.0, 250.0),
-              onTap: () => setState(() => _greeted = true),
+            builder: (context, box) => Stack(
+              children: [
+                Positioned(
+                  left: 0,
+                  right: 0,
+                  bottom: 0,
+                  child: Center(
+                    child: PetAvatarWidget(
+                      mood: FinnyMood.happy,
+                      size: finnyPreviewSize(box).clamp(0, box.maxHeight * .72),
+                      onTap: () => setState(() => _greeted = true),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 10,
+                  left: 10,
+                  right: 10,
+                  child: _Speech(
+                    icon: _greeted
+                        ? Icons.waving_hand_rounded
+                        : Icons.touch_app_rounded,
+                    message: _greeted
+                        ? 'Ура, мы познакомились! Теперь выберем мой облик.'
+                        : 'Нажми на меня — я отвечу!',
+                  ),
+                ),
+              ],
             ),
           ),
         ),
-      ),
-      SizedBox(height: compact ? 8 : 14),
-      _Speech(
-        icon: _greeted ? Icons.waving_hand_rounded : Icons.touch_app_rounded,
-        message: _greeted
-            ? 'Ура, мы познакомились! Теперь выберем мой облик.'
-            : 'Нажми на меня — я отвечу!',
       ),
       SizedBox(height: compact ? 4 : 10),
     ],
   );
 
-  Widget _appearance(bool compact, bool keyboardOpen, FinnyAppearance look) {
-    if (keyboardOpen) {
-      return Column(
-        children: [
-          const SizedBox(height: 8),
-          const _Heading('Как меня зовут?', 'Придумай мне игровое имя.'),
-          const SizedBox(height: 15),
-          _nameField(),
-        ],
-      );
-    }
+  Widget _appearance(bool compact, FinnyAppearance look) {
     return Column(
       children: [
         SizedBox(height: compact ? 2 : 10),
         const _Heading('Каким я буду?', 'Имя и окрас можно выбрать самому.'),
         SizedBox(height: compact ? 7 : 12),
-        Expanded(
-          child: _AvatarStage(
-            child: LayoutBuilder(
-              builder: (context, box) => PetAvatarWidget(
-                mood: FinnyMood.happy,
-                size: (box.maxHeight * .78).clamp(100.0, 170.0),
-              ),
-            ),
-          ),
-        ),
-        SizedBox(height: compact ? 7 : 12),
         _nameField(),
         SizedBox(height: compact ? 7 : 12),
         Row(
           children: [
-            for (final entry in FinnyAppearance.palettes.entries)
+            for (final entry in FinnyAppearance.palettes.entries.where(
+              (entry) => entry.key != 'custom',
+            ))
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 3),
@@ -312,6 +296,17 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               ),
           ],
         ),
+        SizedBox(height: compact ? 7 : 12),
+        Expanded(
+          child: _AvatarStage(
+            child: LayoutBuilder(
+              builder: (context, box) => PetAvatarWidget(
+                mood: FinnyMood.happy,
+                size: finnyPreviewSize(box),
+              ),
+            ),
+          ),
+        ),
         SizedBox(height: compact ? 2 : 8),
       ],
     );
@@ -329,7 +324,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     decoration: InputDecoration(
       labelText: 'Игровое имя питомца',
       counterText: '',
-      prefixIcon: const Icon(Icons.edit_rounded, color: FinnyColors.primary),
+      prefixIcon: Icon(Icons.edit_rounded, color: FinnyColors.primary),
       filled: true,
       fillColor: Colors.white,
       contentPadding: const EdgeInsets.symmetric(horizontal: 15, vertical: 13),
@@ -367,18 +362,14 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 ),
                 Text(
                   '${goal.targetCost}',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w900,
                     fontSize: 17,
                     color: FinnyColors.primary,
                   ),
                 ),
                 const SizedBox(width: 3),
-                const Icon(
-                  Icons.toll_rounded,
-                  color: FinnyColors.coin,
-                  size: 19,
-                ),
+                const Text('🪙', style: TextStyle(fontSize: 18)),
               ],
             ),
           ),
@@ -393,259 +384,156 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   );
 
   Widget _lesson(bool compact) {
-    final toy = _trial == _Trial.toyFirst;
-    final food = _trial == _Trial.foodFirst;
-    final saved = _trial == _Trial.saved;
-    if (saved) return _lessonComplete(compact);
-    return Column(
+    final worked = _trial == _Trial.worked;
+    final rested = _trial == _Trial.rested;
+    return ListView(
+      padding: EdgeInsets.only(top: compact ? 3 : 10, bottom: 10),
       children: [
-        SizedBox(height: compact ? 2 : 10),
-        const _Heading('Первая проба', '12 учебных монет. Еда или игрушка?'),
-        SizedBox(height: compact ? 8 : 18),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            color: const Color(0xFFFFF2CF),
-            borderRadius: BorderRadius.circular(18),
-          ),
-          child: Row(
-            children: [
-              const Icon(
-                Icons.account_balance_wallet_rounded,
-                color: Color(0xFFA76C16),
-                size: 25,
-              ),
-              const SizedBox(width: 9),
-              const Expanded(
-                child: Text(
-                  'Учебный кошелёк',
-                  style: TextStyle(
-                    color: FinnyColors.textPrimary,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 16,
-                  ),
-                ),
-              ),
-              Text(
-                '${toy
-                    ? 2
-                    : food
-                    ? 5
-                    : saved
-                    ? 0
-                    : 12}',
-                style: const TextStyle(
-                  color: Color(0xFFA76C16),
-                  fontSize: 24,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ],
-          ),
+        const _Heading(
+          'Попробуем выбрать',
+          'Смотри на цену решения: монеты, сытость, силы и здоровье.',
         ),
-        SizedBox(height: compact ? 8 : 16),
+        SizedBox(height: compact ? 10 : 18),
         Row(
           children: [
-            Expanded(
-              child: _Purchase(
-                icon: Icons.restaurant_rounded,
-                label: 'Еда',
-                category: 'НУЖНО',
-                price: 7,
-                color: const Color(0xFFE7F5DA),
-                selected: food || saved,
-                onTap: _trial == _Trial.choose
-                    ? () => setState(() => _trial = _Trial.foodFirst)
-                    : null,
-              ),
-            ),
-            const SizedBox(width: 9),
-            Expanded(
-              child: _Purchase(
-                icon: Icons.toys_rounded,
-                label: 'Игрушка',
-                category: 'ХОЧУ',
-                price: 10,
-                color: const Color(0xFFFFE9D6),
-                selected: toy,
-                onTap: _trial == _Trial.choose
-                    ? () => setState(() => _trial = _Trial.toyFirst)
-                    : null,
-              ),
+            _trialStat('🪙', 'Монеты', worked ? '22' : '12'),
+            const SizedBox(width: 6),
+            _trialStat('🍽️', 'Сытость', worked ? 'Голоден' : 'В норме'),
+            const SizedBox(width: 6),
+            _trialStat(
+              '⚡',
+              'Силы',
+              worked
+                  ? 'Устал'
+                  : rested
+                  ? 'Бодр'
+                  : 'В норме',
             ),
           ],
         ),
-        SizedBox(height: compact ? 8 : 15),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 10),
-          decoration: BoxDecoration(
-            color: saved ? const Color(0xFFECE1F9) : Colors.white,
-            border: Border.all(color: const Color(0xFFE6D8F1)),
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Row(
-            children: [
-              const Icon(
-                Icons.savings_rounded,
-                color: FinnyColors.primary,
-                size: 23,
-              ),
-              const SizedBox(width: 9),
-              const Expanded(
-                child: Text(
-                  'КОПЛЮ · на мечту',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w900,
-                    color: FinnyColors.textPrimary,
-                  ),
-                ),
-              ),
-              Text(
-                saved ? '5' : '0',
-                style: const TextStyle(
-                  fontWeight: FontWeight.w900,
-                  color: FinnyColors.primary,
-                  fontSize: 18,
-                ),
-              ),
-            ],
+        const SizedBox(height: 14),
+        const Text(
+          'Сосед просит помочь. Что выберем?',
+          style: TextStyle(
+            fontSize: 19,
+            fontWeight: FontWeight.w900,
+            color: FinnyColors.textPrimary,
           ),
         ),
-        const Spacer(),
-        _Speech(
-          icon: toy
-              ? Icons.lightbulb_rounded
-              : food
-              ? Icons.savings_rounded
-              : Icons.touch_app_rounded,
-          message: toy
-              ? 'После игрушки осталось 2. На еду за 7 не хватает 5. Попробуй иначе!'
-              : food
-              ? 'После еды осталось 5. Их можно отложить на мечту.'
-              : 'Нажми на карточку. Оба выбора можно попробовать.',
+        const SizedBox(height: 9),
+        _lessonOption(
+          '🧩',
+          'Помочь соседу',
+          '🪙+10  🍽️−  ⚡−  ❤️−',
+          worked,
+          () => setState(() => _trial = _Trial.worked),
+        ),
+        const SizedBox(height: 8),
+        _lessonOption(
+          '🛏️',
+          'Отдохнуть',
+          '⚡+  🪙 без перемен',
+          rested,
+          () => setState(() => _trial = _Trial.rested),
+        ),
+        const SizedBox(height: 12),
+        if (_trial != _Trial.choose)
+          _Speech(
+            icon: Icons.lightbulb_rounded,
+            message: worked
+                ? 'Монет стало больше, но Финни устал и проголодался. Следующее решение поможет восстановить баланс.'
+                : 'Финни отдохнул. Монет не прибавилось, зато теперь есть силы для новых дел.',
+          )
+        else
+          const _Speech(
+            icon: Icons.touch_app_rounded,
+            message: 'Нажми любой вариант. Ошибиться нельзя: у каждого выбора есть своя польза.',
+          ),
+        const SizedBox(height: 12),
+        const Text(
+          'На главном экране',
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
+        ),
+        const SizedBox(height: 6),
+        const Text(
+          'Задания дают монеты и здоровье. В лавке есть еда и вещи для игр в комнате. В «Мечте» можно откладывать, оставляя деньги на еду.',
+          style: TextStyle(fontSize: 13, height: 1.3),
         ),
       ],
     );
   }
 
-  Widget _lessonComplete(bool compact) {
-    final realCoins = ref.watch(gameEngineProvider).balance;
-    return Column(
-      children: [
-        SizedBox(height: compact ? 2 : 10),
-        const _Heading('Ура, получилось!', 'Теперь начнём настоящий день.'),
-        SizedBox(height: compact ? 8 : 18),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.fromLTRB(16, 10, 16, 10),
-          decoration: BoxDecoration(
-            color: const Color(0xFFFFE6BA),
-            border: Border.all(color: const Color(0xFFDEAA53), width: 1.5),
-            borderRadius: BorderRadius.circular(20),
+  Widget _trialStat(String icon, String label, String value) => Expanded(
+    child: Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 9),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(13),
+        border: Border.all(color: FinnyColors.border),
+      ),
+      child: Column(
+        children: [
+          Text(icon, style: const TextStyle(fontSize: 20)),
+          Text(label, style: const TextStyle(fontSize: 11)),
+          Text(
+            value,
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w900),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'УЧЕБНАЯ ПРОБА',
-                style: TextStyle(
-                  fontSize: 12,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: .7,
-                  color: Color(0xFF83510A),
-                ),
-              ),
-              const SizedBox(height: 3),
-              const Text(
-                '12 − 7 = 5',
-                style: TextStyle(
-                  fontSize: 26,
-                  height: 1.1,
-                  fontWeight: FontWeight.w900,
-                  color: FinnyColors.textPrimary,
-                ),
-              ),
-              const Text(
-                'Еду купили, 5 монет сохранены для мечты.',
-                style: TextStyle(
-                  fontSize: 13,
-                  height: 1.2,
-                  fontWeight: FontWeight.w800,
-                  color: FinnyColors.textPrimary,
-                ),
-              ),
-            ],
+        ],
+      ),
+    ),
+  );
+
+  Widget _lessonOption(
+    String icon,
+    String title,
+    String effect,
+    bool selected,
+    VoidCallback action,
+  ) => Material(
+    color: selected ? FinnyColors.primaryLight : Colors.white,
+    borderRadius: BorderRadius.circular(16),
+    child: InkWell(
+      onTap: action,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        width: double.infinity,
+        constraints: const BoxConstraints(minHeight: 75),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          border: Border.all(
+            color: selected ? FinnyColors.primary : FinnyColors.border,
+            width: selected ? 2 : 1,
           ),
+          borderRadius: BorderRadius.circular(16),
         ),
-        SizedBox(height: compact ? 5 : 9),
-        const Icon(
-          Icons.arrow_downward_rounded,
-          size: 26,
-          color: FinnyColors.primary,
-        ),
-        SizedBox(height: compact ? 5 : 9),
-        Container(
-          width: double.infinity,
-          height: 101,
-          padding: const EdgeInsets.only(left: 17, right: 8),
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF5631A3), Color(0xFF9D68D9)],
-              begin: Alignment.centerLeft,
-              end: Alignment.centerRight,
+        child: Row(
+          children: [
+            Text(icon, style: const TextStyle(fontSize: 27)),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(effect, style: const TextStyle(fontSize: 13)),
+                ],
+              ),
             ),
-            borderRadius: BorderRadius.circular(22),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'НАСТОЯЩИЙ КОШЕЛЁК',
-                      style: TextStyle(
-                        fontSize: 11,
-                        letterSpacing: .5,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                      ),
-                    ),
-                    Text(
-                      '$realCoins монет',
-                      style: const TextStyle(
-                        fontSize: 28,
-                        height: 1.16,
-                        fontWeight: FontWeight.w900,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const Text(
-                      'Учебные монеты не переносятся.',
-                      style: TextStyle(
-                        fontSize: 12,
-                        height: 1.2,
-                        fontWeight: FontWeight.w700,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const PetAvatarWidget(mood: FinnyMood.happy, size: 70),
-            ],
-          ),
+            if (selected)
+              Icon(Icons.check_circle_rounded, color: FinnyColors.primary),
+          ],
         ),
-        const Spacer(),
-        const _Speech(
-          icon: Icons.route_rounded,
-          message: 'Первый шаг — план на день: еда, запас, мечта. Монеты пока не тратятся.',
-        ),
-      ],
-    );
-  }
+      ),
+    ),
+  );
 }
 
 class _Heading extends StatelessWidget {
@@ -689,7 +577,7 @@ class _AvatarStage extends StatelessWidget {
     width: double.infinity,
     alignment: Alignment.center,
     decoration: BoxDecoration(
-      color: const Color(0xFFF1EAF8),
+      color: FinnyColors.surfaceMuted,
       borderRadius: BorderRadius.circular(28),
     ),
     child: child,
@@ -708,7 +596,7 @@ class _Speech extends StatelessWidget {
     padding: const EdgeInsets.symmetric(horizontal: 13, vertical: 10),
     decoration: BoxDecoration(
       color: Colors.white,
-      border: Border.all(color: const Color(0xFFE8DFF0)),
+      border: Border.all(color: FinnyColors.borderLight),
       borderRadius: BorderRadius.circular(18),
     ),
     child: Row(
@@ -743,7 +631,7 @@ class _Choice extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Material(
-    color: selected ? const Color(0xFFF0E8FA) : Colors.white,
+    color: selected ? FinnyColors.primaryLight : Colors.white,
     borderRadius: BorderRadius.circular(17),
     child: InkWell(
       onTap: onTap,
@@ -759,95 +647,6 @@ class _Choice extends StatelessWidget {
           borderRadius: BorderRadius.circular(17),
         ),
         child: child,
-      ),
-    ),
-  );
-}
-
-class _Purchase extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String category;
-  final int price;
-  final Color color;
-  final bool selected;
-  final VoidCallback? onTap;
-  const _Purchase({
-    required this.icon,
-    required this.label,
-    required this.category,
-    required this.price,
-    required this.color,
-    required this.selected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) => Material(
-    color: color,
-    borderRadius: BorderRadius.circular(18),
-    child: InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
-      child: Container(
-        height: 120,
-        padding: const EdgeInsets.all(11),
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: selected ? FinnyColors.primary : Colors.transparent,
-            width: 2,
-          ),
-          borderRadius: BorderRadius.circular(18),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(icon, color: FinnyColors.textPrimary, size: 28),
-                const Spacer(),
-                if (selected)
-                  const Icon(
-                    Icons.check_circle_rounded,
-                    color: FinnyColors.primary,
-                    size: 21,
-                  ),
-              ],
-            ),
-            const Spacer(),
-            Text(
-              category,
-              style: const TextStyle(
-                fontSize: 11,
-                letterSpacing: 1,
-                fontWeight: FontWeight.w900,
-                color: FinnyColors.textSecondary,
-              ),
-            ),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    label,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w900,
-                      color: FinnyColors.textPrimary,
-                    ),
-                  ),
-                ),
-                Text(
-                  '$price',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w900,
-                    color: FinnyColors.textPrimary,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
       ),
     ),
   );
