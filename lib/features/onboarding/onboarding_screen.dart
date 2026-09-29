@@ -437,17 +437,29 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           () => setState(() => _trial = _Trial.rested),
         ),
         const SizedBox(height: 12),
-        if (_trial != _Trial.choose)
+        if (_trial != _Trial.choose) ...[
           _Speech(
             icon: Icons.lightbulb_rounded,
             message: worked
-                ? 'Монет стало больше, но Финни устал и проголодался. Следующее решение поможет восстановить баланс.'
-                : 'Финни отдохнул. Монет не прибавилось, зато теперь есть силы для новых дел.',
-          )
-        else
+                ? 'Монет стало больше, но питомец устал и проголодался. Нажми «Отдохнуть», чтобы сравнить оба варианта!'
+                : 'Питомец отдохнул. Монет не прибавилось, зато есть силы. Нажми «Помочь соседу», чтобы сравнить!',
+          ),
+          const SizedBox(height: 4),
+          Center(
+            child: TextButton.icon(
+              onPressed: () => setState(() => _trial = _Trial.choose),
+              icon: const Icon(Icons.restart_alt_rounded, size: 18),
+              label: const Text(
+                'Сбросить и попробовать другой выбор',
+                style: TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
+              ),
+            ),
+          ),
+        ] else
           const _Speech(
             icon: Icons.touch_app_rounded,
-            message: 'Нажми любой вариант. Ошибиться нельзя: у каждого выбора есть своя польза.',
+            message:
+                'Нажми любой вариант. Ошибиться нельзя: у каждого выбора есть своя польза.',
           ),
         const SizedBox(height: 12),
         const Text(

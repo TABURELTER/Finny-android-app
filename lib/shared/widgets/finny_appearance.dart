@@ -23,6 +23,7 @@ class FinnyAppearance extends ChangeNotifier {
     'blue': 'Синяя',
     'coral': 'Коралловая',
     'mint': 'Мятная',
+    'custom': 'Свой цвет',
   };
   static const hats = {
     'none': 'Без шапки',
@@ -35,6 +36,7 @@ class FinnyAppearance extends ChangeNotifier {
   Color tuftColor = const Color(0xFFA7E75B);
   Color bellyColor = const Color(0xFFF1E4FF);
   Color eyeColor = const Color(0xFF83C945);
+  Color jacketColor = const Color(0xFF398CB3);
   bool glasses = false, bow = false, _edited = false, _disposed = false;
   bool _demoActive = false;
   Future<void> _writes = Future<void>.value();
@@ -55,6 +57,7 @@ class FinnyAppearance extends ChangeNotifier {
     tuftColor = const Color(0xFFA7E75B);
     bellyColor = const Color(0xFFF1E4FF);
     eyeColor = const Color(0xFF83C945);
+    jacketColor = const Color(0xFF398CB3);
     try {
       final data = jsonDecode(
         prefs.getString(_activeKey) ?? '{}',
@@ -70,6 +73,9 @@ class FinnyAppearance extends ChangeNotifier {
         bellyColor = Color(data['bellyColor'] as int);
       }
       if (data['eyeColor'] is int) eyeColor = Color(data['eyeColor'] as int);
+      if (data['jacketColor'] is int) {
+        jacketColor = Color(data['jacketColor'] as int);
+      }
     } catch (_) {
       // Invalid cosmetic data does not affect game progress.
     }
@@ -107,6 +113,7 @@ class FinnyAppearance extends ChangeNotifier {
     Color? tuftColor,
     Color? bellyColor,
     Color? eyeColor,
+    Color? jacketColor,
   }) {
     _edited = true;
     if (palettes.containsKey(palette)) this.palette = palette!;
@@ -119,6 +126,10 @@ class FinnyAppearance extends ChangeNotifier {
         bellyColor != null ||
         eyeColor != null) {
       this.palette = 'custom';
+    }
+    if (jacketColor != null) {
+      this.jacket = 'custom';
+      this.jacketColor = jacketColor;
     }
     this.furColor = furColor ?? this.furColor;
     this.tuftColor = tuftColor ?? this.tuftColor;
@@ -135,6 +146,7 @@ class FinnyAppearance extends ChangeNotifier {
       'tuftColor': this.tuftColor.toARGB32(),
       'bellyColor': this.bellyColor.toARGB32(),
       'eyeColor': this.eyeColor.toARGB32(),
+      'jacketColor': this.jacketColor.toARGB32(),
     });
     final key = _activeKey;
     _writes = _writes.catchError((Object _) {}).then((_) async {
@@ -157,6 +169,7 @@ class FinnyAppearance extends ChangeNotifier {
     tuftColor = const Color(0xFFA7E75B);
     bellyColor = const Color(0xFFF1E4FF);
     eyeColor = const Color(0xFF83C945);
+    jacketColor = const Color(0xFF398CB3);
     notifyListeners();
     final key = _activeKey;
     _writes = _writes.catchError((Object _) {}).then((_) async {

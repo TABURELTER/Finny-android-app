@@ -49,8 +49,8 @@ abstract final class FinnyColors {
   static const Color successLight = Color(0xFFE5F4EB);
   static const Color warning = Color(0xFFAC6324);
   static const Color warningLight = Color(0xFFFFEBCF);
-  static const Color danger = Color(0xFFC74747);
-  static const Color dangerLight = Color(0xFFFBE8E6);
+  static const Color danger = Color(0xFFE53935);
+  static const Color dangerLight = Color(0xFFFFEBEE);
 
   // ── Coin Gold ──
   static const Color coin = Color(0xFFD59020);

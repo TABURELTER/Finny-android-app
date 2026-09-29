@@ -35,6 +35,11 @@ class FinnySvg {
       'coral': ['#D66A59', '#A74743', '#EB9A7F'],
       'mint': ['#65AA95', '#387564', '#9BD0B9'],
       'raincoat': ['#F5C94B', '#A86B1D', '#FFE68C'],
+      'custom': [
+        _hex(look.jacketColor),
+        _hex(_darker(look.jacketColor, .22)),
+        _hex(_lighter(look.jacketColor, .22)),
+      ],
     };
     final happy = mood == FinnyMood.happy;
     for (final el in doc.descendants.whereType<XmlElement>().toList()) {
@@ -110,34 +115,35 @@ class FinnySvg {
     return doc.toXmlString();
   }
 
+  static String _hex(Color color) =>
+      '#${color.toARGB32().toRadixString(16).padLeft(8, '0').substring(2).toUpperCase()}';
+  static Color _lighter(Color color, double amount) =>
+      Color.lerp(color, Colors.white, amount)!;
+  static Color _darker(Color color, double amount) =>
+      Color.lerp(color, Colors.black, amount)!;
+
   static Map<String, String> _customColors(FinnyAppearance look) {
-    String hex(Color color) =>
-        '#${color.toARGB32().toRadixString(16).padLeft(8, '0').substring(2).toUpperCase()}';
-    Color lighter(Color color, double amount) =>
-        Color.lerp(color, Colors.white, amount)!;
-    Color darker(Color color, double amount) =>
-        Color.lerp(color, Colors.black, amount)!;
     final fur = look.furColor;
     final tuft = look.tuftColor;
     final belly = look.bellyColor;
     return {
-      '#8549E8': hex(fur),
-      '#743AD7': hex(darker(fur, .13)),
-      '#6936CE': hex(darker(fur, .20)),
-      '#5127A7': hex(darker(fur, .35)),
-      '#4A259B': hex(darker(fur, .42)),
-      '#683ABE': hex(darker(fur, .25)),
-      '#51275E': hex(darker(fur, .48)),
-      '#8A5294': hex(darker(fur, .22)),
-      '#A7E75B': hex(tuft),
-      '#B6EC6E': hex(lighter(tuft, .2)),
-      '#9FDC56': hex(darker(tuft, .06)),
-      '#8ED047': hex(darker(tuft, .14)),
-      '#C8F28E': hex(lighter(tuft, .38)),
-      '#8BC74A': hex(darker(tuft, .19)),
-      '#F1E4FF': hex(belly),
-      '#C2A1F0': hex(darker(belly, .15)),
-      '#83C945': hex(look.eyeColor),
+      '#8549E8': _hex(fur),
+      '#743AD7': _hex(_darker(fur, .13)),
+      '#6936CE': _hex(_darker(fur, .20)),
+      '#5127A7': _hex(_darker(fur, .35)),
+      '#4A259B': _hex(_darker(fur, .42)),
+      '#683ABE': _hex(_darker(fur, .25)),
+      '#51275E': _hex(_darker(fur, .48)),
+      '#8A5294': _hex(_darker(fur, .22)),
+      '#A7E75B': _hex(tuft),
+      '#B6EC6E': _hex(_lighter(tuft, .2)),
+      '#9FDC56': _hex(_darker(tuft, .06)),
+      '#8ED047': _hex(_darker(tuft, .14)),
+      '#C8F28E': _hex(_lighter(tuft, .38)),
+      '#8BC74A': _hex(_darker(tuft, .19)),
+      '#F1E4FF': _hex(belly),
+      '#C2A1F0': _hex(_darker(belly, .15)),
+      '#83C945': _hex(look.eyeColor),
     };
   }
 }

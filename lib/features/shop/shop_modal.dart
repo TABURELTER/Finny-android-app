@@ -7,6 +7,7 @@ import '../../data/models/game_state.dart';
 import '../../data/models/item_models.dart';
 import '../../game/content/shop_items.dart';
 import '../../game/engine/game_engine.dart';
+import '../../core/sound/sound_service.dart';
 
 const _expenseColor = Color(0xFFAD3B4C);
 const _expenseSurface = Color(0xFFFFE7E9);
@@ -332,6 +333,7 @@ class _ShopModalState extends ConsumerState<ShopModal> {
                                 .read(gameEngineProvider.notifier)
                                 .buyItem(item);
                             if (!bought) return;
+                            SoundService.instance.playCoin();
                             final left = ref.read(gameEngineProvider).balance;
                             if (state.settings.hapticsEnabled) {
                               HapticFeedback.lightImpact();
@@ -488,9 +490,14 @@ class _ShopModalState extends ConsumerState<ShopModal> {
               const SizedBox(width: 10),
               Expanded(
                 child: _Action(
-                  'В домик',
+                  item.id == 'raincoat' ? 'Надеть дождевик' : 'В домик',
                   true,
-                  () => Navigator.of(context).pop(),
+                  () {
+                    if (item.id == 'raincoat') {
+                      ref.read(gameEngineProvider.notifier).equipRaincoat(true);
+                    }
+                    Navigator.of(context).pop();
+                  },
                 ),
               ),
             ],

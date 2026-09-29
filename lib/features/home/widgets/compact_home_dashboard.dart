@@ -7,6 +7,7 @@ import '../../../game/content/days.dart';
 import '../../../game/content/goals.dart';
 import '../../../shared/widgets/pet_avatar_widget.dart';
 import '../../../shared/widgets/room_scene_svg.dart';
+import '../../../core/sound/sound_service.dart';
 import 'balance_decision_card.dart';
 
 const _ink = FinnyColors.textPrimary;
@@ -73,15 +74,16 @@ class CompactHomeDashboard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final petName = state.profile.petName;
     final roomMessage =
         petSpeech ??
         (state.plannedBudget?.isConfirmed != true
-            ? dayConfigFor(state.day).morningMessage
+            ? dayConfigFor(state.day).morningMessage.replaceAll('Финни', petName)
             : state.balanceStats.cardsToday == 0 &&
                   state.balanceStats.satiety <= 1
             ? 'Я проголодался. Поможешь выбрать еду?'
             : _displayCoinAmounts(state.finny.moodReason)
-                  .replaceFirst(RegExp(r'^Финни '), 'Я '));
+                  .replaceFirst(RegExp('^(${RegExp.escape(petName)}|Финни) '), 'Я '));
     return Center(
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 560),
@@ -160,9 +162,15 @@ class CompactHomeDashboard extends StatelessWidget {
                                           room.maxWidth - 70,
                                         ),
                                         hasRaincoat:
-                                            state.finny.activeOutfit ==
-                                                'raincoat' &&
-                                            state.inventory.hasItem('raincoat'),
+                                            state.inventory.hasItem('raincoat') &&
+                                                (state.finny.activeOutfit ==
+                                                        'raincoat' ||
+                                                    state.forecast.title
+                                                        .toLowerCase()
+                                                        .contains('ливень') ||
+                                                    state.forecast.title
+                                                        .toLowerCase()
+                                                        .contains('дождь')),
                                         onTap: pet,
                                         onReact: onPetReact,
                                         requestedReaction: requestedReaction,
@@ -611,7 +619,10 @@ class _NavButton extends StatelessWidget {
       color: FinnyColors.surfaceMuted,
       borderRadius: BorderRadius.circular(14),
       child: InkWell(
-        onTap: action,
+        onTap: () {
+          SoundService.instance.playTap();
+          action();
+        },
         borderRadius: BorderRadius.circular(14),
         child: Container(
           constraints: const BoxConstraints(minHeight: 64),

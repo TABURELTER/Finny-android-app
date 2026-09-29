@@ -62,6 +62,7 @@ class WardrobeSheet extends ConsumerWidget {
         'Шёрстка' => look.update(furColor: picked),
         'Хохолок и ушки' => look.update(tuftColor: picked),
         'Мордочка' => look.update(bellyColor: picked),
+        'Куртка' => look.update(jacketColor: picked, jacket: 'custom'),
         _ => look.update(eyeColor: picked),
       });
     }
@@ -254,6 +255,12 @@ class WardrobeSheet extends ConsumerWidget {
                             Color(0xFF5CA890),
                             Icons.checkroom_rounded,
                           ),
+                          _LookChoice(
+                            'custom',
+                            'Свой цвет',
+                            look.jacketColor,
+                            Icons.palette_rounded,
+                          ),
                           if (hasRaincoat)
                             const _LookChoice(
                               'raincoat',
@@ -275,6 +282,17 @@ class WardrobeSheet extends ConsumerWidget {
                           }
                         },
                       ),
+                      if (look.jacket == 'custom' && !raincoatEquipped) ...[
+                        Align(
+                          alignment: Alignment.centerLeft,
+                          child: _ColorEdit(
+                            'Цвет куртки',
+                            look.jacketColor,
+                            () => editColor('Куртка', look.jacketColor),
+                          ),
+                        ),
+                        const SizedBox(height: 7),
+                      ],
                       _OptionGroup(
                         title: 'Шапка',
                         compact: compact,

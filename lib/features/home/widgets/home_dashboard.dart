@@ -242,7 +242,10 @@ class HomeDashboard extends StatelessWidget {
                                 ),
                                 stage: state.finny.stage,
                                 hasRaincoat:
-                                    rain && state.inventory.hasItem('raincoat'),
+                                    state.inventory.hasItem('raincoat') &&
+                                        (state.finny.activeOutfit ==
+                                                'raincoat' ||
+                                            rain),
                                 onTap: pet,
                               ),
                             ),
@@ -285,7 +288,7 @@ class HomeDashboard extends StatelessWidget {
                                     const SizedBox(width: 4),
                                     Text(
                                       state.inventory.foodReserveDays > 0
-                                          ? '${state.inventory.foodReserveDays} дн.'
+                                          ? 'Запас: ${state.inventory.foodReserveDays}'
                                           : 'Пора поесть',
                                       style: const TextStyle(
                                         fontSize: 11,

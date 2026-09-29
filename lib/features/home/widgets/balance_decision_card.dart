@@ -9,6 +9,7 @@ import '../../../game/content/balance_cards.dart';
 import '../../../game/content/days.dart';
 import '../../../game/content/events.dart';
 import '../../../game/engine/game_engine.dart';
+import '../../../core/sound/sound_service.dart';
 import '../../work/work_screen.dart';
 
 EventDefinition? pendingStory(GameState state) {
@@ -381,6 +382,7 @@ class BalanceDecisionCard extends ConsumerWidget {
         if (option is EventChoice) {
           final useSavings = state.balance < price(option);
           if (useSavings) {
+            SoundService.instance.playWarning();
             showDialog<void>(
               context: context,
               builder: (dialogContext) => AlertDialog(
@@ -396,6 +398,7 @@ class BalanceDecisionCard extends ConsumerWidget {
                   FilledButton(
                     onPressed: () {
                       Navigator.pop(dialogContext);
+                      SoundService.instance.playCoin();
                       ref
                           .read(gameEngineProvider.notifier)
                           .resolveEventChoice(story!, option, useSavings: true);
@@ -406,9 +409,16 @@ class BalanceDecisionCard extends ConsumerWidget {
               ),
             );
           } else {
-            void choose() => ref
-                .read(gameEngineProvider.notifier)
-                .resolveEventChoice(story!, option);
+            void choose() {
+              if (price(option) > 0) {
+                SoundService.instance.playCoin();
+              } else {
+                SoundService.instance.playTap();
+              }
+              ref
+                  .read(gameEngineProvider.notifier)
+                  .resolveEventChoice(story!, option);
+            }
             if (price(option) > 0) {
               confirmSpending(option, choose);
             } else {
@@ -417,11 +427,19 @@ class BalanceDecisionCard extends ConsumerWidget {
           }
         } else if (option is BalanceChoice) {
           if (option.opensWork) {
+            SoundService.instance.playTap();
             WorkScreen.open(context);
           } else {
-            void choose() => ref
-                .read(gameEngineProvider.notifier)
-                .chooseBalanceCard(card!.id, option.id);
+            void choose() {
+              if (price(option) > 0) {
+                SoundService.instance.playCoin();
+              } else {
+                SoundService.instance.playTap();
+              }
+              ref
+                  .read(gameEngineProvider.notifier)
+                  .chooseBalanceCard(card!.id, option.id);
+            }
             if (price(option) > 0) {
               confirmSpending(option, choose);
             } else {

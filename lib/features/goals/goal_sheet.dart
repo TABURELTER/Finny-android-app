@@ -7,6 +7,7 @@ import '../../core/theme/finny_widgets.dart';
 import '../../game/content/goals.dart';
 import '../../game/content/shop_items.dart';
 import '../../game/engine/game_engine.dart';
+import '../../core/sound/sound_service.dart';
 
 class GoalSheet extends ConsumerWidget {
   const GoalSheet({super.key});
@@ -439,6 +440,7 @@ class GoalSheet extends ConsumerWidget {
   void _depositAndCelebrate(BuildContext context, WidgetRef ref, int amount) {
     final before = ref.read(gameEngineProvider);
     if (!ref.read(gameEngineProvider.notifier).depositToGoal(amount)) return;
+    SoundService.instance.playCoin();
     final after = ref.read(gameEngineProvider);
     final moved = before.balance - after.balance;
     if (after.settings.hapticsEnabled) HapticFeedback.lightImpact();
@@ -635,6 +637,7 @@ class GoalSheet extends ConsumerWidget {
           ),
           FilledButton(
             onPressed: () {
+              SoundService.instance.playSuccess();
               ref.read(gameEngineProvider.notifier).claimGoal();
               Navigator.pop(dialogContext);
             },

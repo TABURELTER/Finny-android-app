@@ -284,7 +284,7 @@ class GameEngine extends StateNotifier<GameState> {
 
     if (item.category == ItemCategory.want) {
       newMood = FinnyMood.happy;
-      newMoodReason = 'Финни в восторге от новой игрушки: ${item.name}!';
+      newMoodReason = '${state.profile.petName} в восторге от новой игрушки: ${item.name}!';
     } else if (item.foodDaysProvided > 1) {
       newMood = FinnyMood.good;
       newMoodReason =
@@ -414,7 +414,7 @@ class GameEngine extends StateNotifier<GameState> {
       finny: state.finny.copyWith(
         mood: FinnyMood.happy,
         moodReason:
-            '${definition.name} теперь у Финни! Копилка уменьшилась на ${definition.targetCost} 🪙.',
+            '${definition.name} теперь у ${state.profile.petName}! Копилка уменьшилась на ${definition.targetCost} 🪙.',
       ),
     );
     _save();
@@ -721,17 +721,18 @@ class GameEngine extends StateNotifier<GameState> {
         reserveSpent <= plan.reserve &&
         state.balance + reserveSpent >= plan.reserve;
     final balanced = caredForFinny && followedPlan;
+    final pet = state.profile.petName;
     final reflection = stats.satiety <= 1
-        ? 'Финни проголодался. Завтра начни с еды.'
+        ? '$pet проголодался. Завтра начни с еды.'
         : stats.energy <= 1
-        ? 'У Финни мало сил. Завтра можно выбрать отдых.'
+        ? 'У $pet мало сил. Завтра можно выбрать отдых.'
         : stats.wellbeing <= 1
-        ? 'Финни нужно восстановиться. Попроси помощи взрослого.'
+        ? '$pet нужно восстановиться. Попроси помощи взрослого.'
         : !followedPlan
         ? 'План сегодня изменился. Вечером посмотрим почему и попробуем снова.'
         : state.daySaved > 0
-        ? 'Финни в порядке, а мечта стала ближе на ${state.daySaved} 🪙.'
-        : 'Финни чувствует себя хорошо. Завтра ждут новые решения!';
+        ? '$pet в порядке, а мечта стала ближе на ${state.daySaved} 🪙.'
+        : '$pet чувствует себя хорошо. Завтра ждут новые решения!';
 
     final summary = DaySummaryRecord(
       day: state.day,
@@ -798,8 +799,8 @@ class GameEngine extends StateNotifier<GameState> {
         finny: state.finny.copyWith(
           mood: FinnyMood.happy,
           moodReason: stage == DevelopmentStage.independent
-              ? 'Финни подрос: ты заботился о нём и откладывал на мечту.'
-              : 'Финни стал самостоятельнее: забота и первый взнос помогли ему.',
+              ? '${state.profile.petName} подрос: ты заботился о нём и откладывал на мечту.'
+              : '${state.profile.petName} стал самостоятельнее: забота и первый взнос помогли ему.',
         ),
       );
       _save();

@@ -22,6 +22,7 @@ import '../shop/shop_modal.dart';
 import '../work/work_screen.dart';
 import '../../shared/widgets/color_picker_dialog.dart';
 import '../../shared/widgets/pet_avatar_widget.dart';
+import '../../core/sound/sound_service.dart';
 
 import 'wardrobe_sheet.dart';
 
@@ -67,6 +68,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   void _onPetReact(FinnyReaction reaction) {
+    SoundService.instance.playHappy();
     final message = switch (reaction) {
       FinnyReaction.wave => 'Привет! Рад тебя видеть 👋',
       FinnyReaction.hop => 'Смотри, как я прыгаю! ✨',
@@ -77,6 +79,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   }
 
   void _onRoomItem(String item) {
+    SoundService.instance.playHappy();
     if (ref.read(gameEngineProvider).plannedBudget?.isConfirmed != true) {
       PlanningSheet.show(context);
       return;
@@ -141,45 +144,38 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       text: ref.read(gameEngineProvider).profile.petName,
     );
     String? error;
-    await showModalBottomSheet<void>(
+    await showDialog<void>(
       context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      backgroundColor: FinnyColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      clipBehavior: Clip.antiAlias,
-      showDragHandle: true,
-      builder: (sheetContext) => StatefulBuilder(
-        builder: (sheetContext, refresh) {
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, refresh) {
           void save() {
             final changed = ref
                 .read(gameEngineProvider.notifier)
                 .renamePet(controller.text);
             if (changed) {
-              Navigator.of(sheetContext).pop();
+              Navigator.of(dialogContext).pop();
             } else {
               refresh(() => error = 'Введи имя от 1 до 16 букв');
             }
           }
 
-          return Padding(
-            padding: EdgeInsets.fromLTRB(
-              20,
-              20,
-              20,
-              MediaQuery.viewInsetsOf(sheetContext).bottom + 20,
+          return AlertDialog(
+            backgroundColor: Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(24),
             ),
-            child: Column(
+            title: const Text(
+              'Как меня зовут?',
+              style: TextStyle(
+                color: FinnyColors.textPrimary,
+                fontSize: 22,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+            content: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Text(
-                  'Как меня зовут?',
-                  style: TextStyle(fontSize: 23, fontWeight: FontWeight.w900),
-                ),
-                const SizedBox(height: 12),
                 TextField(
                   controller: controller,
                   autofocus: true,
@@ -193,16 +189,33 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
                   decoration: InputDecoration(
                     labelText: 'Имя питомца',
                     errorText: error,
-                    border: const OutlineInputBorder(),
+                    filled: true,
+                    fillColor: FinnyColors.surfaceMuted,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: const BorderSide(color: FinnyColors.border),
+                    ),
                   ),
-                ),
-                const SizedBox(height: 8),
-                FilledButton(
-                  onPressed: save,
-                  child: const Text('Сохранить имя'),
                 ),
               ],
             ),
+            actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: const Text('Отмена'),
+              ),
+              FilledButton(
+                onPressed: save,
+                style: FilledButton.styleFrom(
+                  backgroundColor: FinnyColors.primary,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                child: const Text('Сохранить'),
+              ),
+            ],
           );
         },
       ),

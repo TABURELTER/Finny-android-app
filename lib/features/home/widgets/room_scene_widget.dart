@@ -25,7 +25,8 @@ class RoomSceneWidget extends StatelessWidget {
     final inv = state.inventory;
     final hasRaincoat =
         inv.hasItem('raincoat') &&
-        (state.forecast.title.toLowerCase().contains('ливень') ||
+        (state.finny.activeOutfit == 'raincoat' ||
+            state.forecast.title.toLowerCase().contains('ливень') ||
             state.forecast.title.toLowerCase().contains('дождь'));
     final hasBed = inv.hasItem('cozy_bed');
     final hasBall = inv.hasItem('toy_ball');
@@ -340,7 +341,7 @@ class _FoodIndicator extends StatelessWidget {
           Text(hasFood ? '🍎' : '💔', style: const TextStyle(fontSize: 13)),
           const Gap(4),
           Text(
-            hasFood ? '$daysRemaining дн.' : 'Голоден',
+            hasFood ? 'Запас: $daysRemaining' : 'Голоден',
             style: GoogleFonts.nunito(
               fontSize: 11,
               fontWeight: FontWeight.w800,

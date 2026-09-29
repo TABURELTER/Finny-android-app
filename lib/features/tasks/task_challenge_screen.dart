@@ -5,6 +5,7 @@ import '../../core/theme/finny_tokens.dart';
 import '../../data/models/event_models.dart';
 import '../../data/models/task_models.dart';
 import '../../game/engine/game_engine.dart';
+import '../../core/sound/sound_service.dart';
 import '../../shared/widgets/pet_avatar_widget.dart';
 
 class TaskChallengeScreen extends ConsumerStatefulWidget {
@@ -155,6 +156,7 @@ class _TaskChallengeScreenState extends ConsumerState<TaskChallengeScreen> {
         .read(gameEngineProvider.notifier)
         .completeFinancialTask(id, outcome);
     if (awarded) {
+      SoundService.instance.playSuccess();
       setState(() => completed = true);
       return;
     }
@@ -275,7 +277,14 @@ class _TaskChallengeScreenState extends ConsumerState<TaskChallengeScreen> {
                         child: FilledButton(
                           onPressed: checked && solved
                               ? _finish
-                              : () => setState(() => checked = true),
+                              : () {
+                                  if (solved) {
+                                    SoundService.instance.playCoin();
+                                  } else {
+                                    SoundService.instance.playWarning();
+                                  }
+                                  setState(() => checked = true);
+                                },
                           child: Text(
                             checked && solved
                                 ? 'Забрать 3 🪙'

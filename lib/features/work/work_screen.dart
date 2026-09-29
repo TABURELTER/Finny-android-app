@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/theme/finny_tokens.dart';
+import '../../core/sound/sound_service.dart';
 import '../../game/engine/game_engine.dart';
 
 class WorkScreen extends ConsumerStatefulWidget {
@@ -97,6 +98,7 @@ class _WorkScreenState extends ConsumerState<WorkScreen> {
   void _choosePrice(int price) {
     final product = _products[_selected];
     if (price != product.price) {
+      SoundService.instance.playWarning();
       setState(() {
         _attempts++;
         _hintIsError = true;
@@ -106,6 +108,7 @@ class _WorkScreenState extends ConsumerState<WorkScreen> {
       });
       return;
     }
+    SoundService.instance.playCoin();
     setState(() {
       _priced[_selected] = true;
       _hint = 'Верно! Ценник на месте.';
@@ -122,6 +125,7 @@ class _WorkScreenState extends ConsumerState<WorkScreen> {
   }
 
   void _changeCount(int index, int delta) {
+    SoundService.instance.playTap();
     setState(() {
       _basket[index] = (_basket[index] + delta).clamp(0, 4);
       _hint = null;
@@ -134,6 +138,7 @@ class _WorkScreenState extends ConsumerState<WorkScreen> {
     if (List.generate(3, (i) => _basket[i] == target[i]).every((ok) => ok)) {
       _finish();
     } else {
+      SoundService.instance.playWarning();
       setState(() {
         _hintIsError = true;
         _hint = 'Сверь коробку с заявкой наверху.';
@@ -267,6 +272,7 @@ class _WorkScreenState extends ConsumerState<WorkScreen> {
   }
 
   void _finish() {
+    SoundService.instance.playSuccess();
     final balance = ref.read(gameEngineProvider).balance;
     if (ref.read(gameEngineProvider.notifier).completeWork(reward: _reward)) {
       setState(() {
