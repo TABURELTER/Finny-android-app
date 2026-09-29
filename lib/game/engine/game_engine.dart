@@ -825,11 +825,14 @@ class GameEngine extends StateNotifier<GameState> {
     }
   }
 
-  // Retained for existing economy fixtures; no child-facing action calls it.
-  @visibleForTesting
   void addCoins(int amount) {
     if (amount <= 0) return;
     state = state.copyWith(balance: (state.balance + amount).clamp(0, 99999));
+    _save();
+  }
+
+  void resetCoins() {
+    state = state.copyWith(balance: 0);
     _save();
   }
 

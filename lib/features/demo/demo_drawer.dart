@@ -5,6 +5,7 @@ import 'package:gap/gap.dart';
 
 import '../../core/theme/finny_tokens.dart';
 import '../../core/theme/finny_widgets.dart';
+import '../../core/sound/sound_service.dart';
 import '../../game/engine/game_engine.dart';
 import '../../shared/widgets/finny_appearance.dart';
 
@@ -95,10 +96,73 @@ class DemoDrawer extends ConsumerWidget {
 
             const Text(
               'Обычная игра и демо используют одинаковые цены и награды. '
-              'Ниже можно начать отдельную сцену нужного дня; текущий демо-прогресс при этом сбросится.',
+              'Ниже можно начислить монеты для проверки покупок или перейти к конкретному дню.',
               style: TextStyle(fontSize: 13, height: 1.35),
             ),
             const Gap(16),
+
+            // Накрутка монет для тестирования
+            Row(
+              children: [
+                Text(
+                  'Монеты для теста:',
+                  style: TextStyle(
+                    fontFamily: 'Nunito',
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: FinnyColors.textPrimary,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  '${state.balance} 🪙',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w900,
+                    color: FinnyColors.primary,
+                  ),
+                ),
+              ],
+            ),
+            const Gap(8),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                FinnyChip(
+                  label: '+20 🪙',
+                  isSelected: false,
+                  onTap: () {
+                    ref.read(gameEngineProvider.notifier).addCoins(20);
+                    SoundService.instance.playCoin();
+                  },
+                ),
+                FinnyChip(
+                  label: '+50 🪙',
+                  isSelected: false,
+                  onTap: () {
+                    ref.read(gameEngineProvider.notifier).addCoins(50);
+                    SoundService.instance.playCoin();
+                  },
+                ),
+                FinnyChip(
+                  label: '+100 🪙',
+                  isSelected: false,
+                  onTap: () {
+                    ref.read(gameEngineProvider.notifier).addCoins(100);
+                    SoundService.instance.playCoin();
+                  },
+                ),
+                FinnyChip(
+                  label: 'Обнулить 🪙',
+                  isSelected: false,
+                  onTap: () {
+                    ref.read(gameEngineProvider.notifier).resetCoins();
+                  },
+                ),
+              ],
+            ),
+            const Gap(18),
             // Дни
             Text(
               'Отдельная сцена дня:',
