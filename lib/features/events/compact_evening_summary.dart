@@ -1,5 +1,3 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -19,32 +17,42 @@ class CompactEveningSummary extends ConsumerWidget {
     final stats = state.balanceStats;
 
     return Dialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 17, vertical: 16),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       backgroundColor: const Color(0xFFFFFCF6),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       child: ConstrainedBox(
         constraints: BoxConstraints(
           maxWidth: 540,
-          maxHeight: math.min(680, MediaQuery.sizeOf(context).height - 32),
+          maxHeight: MediaQuery.sizeOf(context).height - 24,
         ),
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(18),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('🌙', style: TextStyle(fontSize: 42)),
-              const SizedBox(height: 4),
-              Text(
-                tenDayMilestone
-                    ? 'Десять дней с Финни'
-                    : 'Вечер · день ${state.day}',
-                textAlign: TextAlign.center,
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w900,
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text('🌙', style: TextStyle(fontSize: 22)),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text(
+                        tenDayMilestone
+                            ? 'Десять дней с Финни'
+                            : 'Вечер · день ${state.day}',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 19,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(height: 5),
+              const SizedBox(height: 3),
               Text(
                 tenDayMilestone
                     ? 'Первые десять дней позади. Завтра ждёт новый день!'
@@ -52,9 +60,9 @@ class CompactEveningSummary extends ConsumerWidget {
                     ? 'Сегодня Финни удалось сохранить баланс!'
                     : 'Завтра можно выбрать другой путь.',
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 13),
+                style: const TextStyle(fontSize: 12),
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 9),
               Row(
                 children: [
                   _StateTile(
@@ -91,7 +99,7 @@ class CompactEveningSummary extends ConsumerWidget {
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 7),
               Row(
                 children: [
                   _CoinTile(
@@ -106,13 +114,13 @@ class CompactEveningSummary extends ConsumerWidget {
                 ],
               ),
               if (summary != null && summary.plannedNeeds != null) ...[
-                const SizedBox(height: 12),
+                const SizedBox(height: 7),
                 Container(
                   width: double.infinity,
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
                   decoration: BoxDecoration(
                     color: Colors.white,
-                    borderRadius: BorderRadius.circular(16),
+                    borderRadius: BorderRadius.circular(14),
                     border: Border.all(color: FinnyColors.borderLight),
                   ),
                   child: Column(
@@ -121,11 +129,11 @@ class CompactEveningSummary extends ConsumerWidget {
                       const Text(
                         'План и что получилось',
                         style: TextStyle(
-                          fontSize: 15,
+                          fontSize: 13.5,
                           fontWeight: FontWeight.w900,
                         ),
                       ),
-                      const SizedBox(height: 7),
+                      const SizedBox(height: 4),
                       _PlanRow(
                         '🍽️ Еда',
                         summary.plannedNeeds!,
@@ -150,15 +158,15 @@ class CompactEveningSummary extends ConsumerWidget {
                         Text(
                           'На неожиданности ушло ${summary.actualReserveSpent} 🪙.',
                           style: const TextStyle(
-                            fontSize: 11,
+                            fontSize: 10.5,
                             color: FinnyColors.textSecondary,
                           ),
                         ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: 3),
                       Text(
                         summary.planFeedback,
                         style: TextStyle(
-                          fontSize: 12,
+                          fontSize: 11.5,
                           fontWeight: FontWeight.w800,
                           color: summary.followedPlan
                               ? FinnyColors.success
@@ -169,27 +177,27 @@ class CompactEveningSummary extends ConsumerWidget {
                   ),
                 ),
               ],
-              const SizedBox(height: 13),
+              const SizedBox(height: 7),
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(13),
+                padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
                 decoration: BoxDecoration(
                   color: FinnyColors.primaryLight,
-                  borderRadius: BorderRadius.circular(16),
+                  borderRadius: BorderRadius.circular(14),
                 ),
                 child: Text(
                   summary?.reflection ?? 'Финни ждёт нового дня.',
                   textAlign: TextAlign.center,
                   style: const TextStyle(
-                    fontSize: 14,
+                    fontSize: 12.5,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
               ),
-              const SizedBox(height: 13),
+              const SizedBox(height: 8),
               SizedBox(
                 width: double.infinity,
-                height: 52,
+                height: 46,
                 child: FilledButton(
                   onPressed: () {
                     ref.read(gameEngineProvider.notifier).advanceToNextDay();
@@ -198,7 +206,7 @@ class CompactEveningSummary extends ConsumerWidget {
                   child: Text(
                     'Начать день ${state.day + 1}',
                     style: const TextStyle(
-                      fontSize: 16,
+                      fontSize: 15,
                       fontWeight: FontWeight.w900,
                     ),
                   ),
@@ -248,39 +256,41 @@ class _StateTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Expanded(
     child: Container(
-      padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 4),
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(13),
       ),
       child: Column(
         children: [
-          Text(icon, style: const TextStyle(fontSize: 23)),
+          Text(icon, style: const TextStyle(fontSize: 20)),
           Text(
             label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800),
           ),
-          const SizedBox(height: 5),
+          const SizedBox(height: 4),
           ClipRRect(
             borderRadius: BorderRadius.circular(4),
             child: LinearProgressIndicator(
               value: value / 5,
-              minHeight: 6,
+              minHeight: 5,
               backgroundColor: FinnyColors.borderLight,
               color: value <= 1 ? FinnyColors.warning : FinnyColors.primary,
             ),
           ),
-          const SizedBox(height: 5),
-          Text(
-            status,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: TextStyle(
-              fontSize: 15,
-              color: value <= 1 ? FinnyColors.warning : FinnyColors.primary,
-              fontWeight: FontWeight.w900,
+          const SizedBox(height: 4),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              status,
+              maxLines: 1,
+              style: TextStyle(
+                fontSize: 13,
+                color: value <= 1 ? FinnyColors.warning : FinnyColors.primary,
+                fontWeight: FontWeight.w900,
+              ),
             ),
           ),
         ],
@@ -297,7 +307,7 @@ class _CoinTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Expanded(
     child: Container(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 3),
+      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
       decoration: BoxDecoration(
         color: const Color(0xFFFFEDCE),
         borderRadius: BorderRadius.circular(13),
@@ -310,9 +320,13 @@ class _CoinTile extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w800),
           ),
-          Text(
-            '$sign$value 🪙',
-            style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
+          const SizedBox(height: 2),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              '$sign$value 🪙',
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900),
+            ),
           ),
         ],
       ),

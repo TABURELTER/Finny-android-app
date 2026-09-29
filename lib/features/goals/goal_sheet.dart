@@ -71,13 +71,13 @@ class GoalSheet extends ConsumerWidget {
                                 .selectGoal(goal.id),
                             borderRadius: BorderRadius.circular(14),
                             child: SizedBox(
-                              height: 58,
+                              height: 50,
                               child: Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
                                   Icon(
                                     _icon(goal.id),
-                                    size: 23,
+                                    size: 21,
                                     color: FinnyColors.primary,
                                   ),
                                   Text(
@@ -96,30 +96,30 @@ class GoalSheet extends ConsumerWidget {
                     ),
                 ],
               ),
-              const SizedBox(height: 9),
+              const SizedBox(height: 8),
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.all(14),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                 decoration: BoxDecoration(
                   color: const Color(0xFFF0E9F8),
-                  borderRadius: BorderRadius.circular(19),
+                  borderRadius: BorderRadius.circular(18),
                 ),
                 child: Row(
                   children: [
                     Container(
-                      width: 68,
-                      height: 68,
+                      width: 56,
+                      height: 56,
                       decoration: const BoxDecoration(
                         color: Colors.white,
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
                         _icon(current.id),
-                        size: 35,
+                        size: 28,
                         color: FinnyColors.primary,
                       ),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: 10),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -150,20 +150,20 @@ class GoalSheet extends ConsumerWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               Row(
                 children: [
                   Icon(
                     Icons.savings_rounded,
-                    size: 21,
+                    size: 20,
                     color: FinnyColors.primary,
                   ),
-                  const SizedBox(width: 7),
+                  const SizedBox(width: 6),
                   const Expanded(
                     child: Text(
                       'В копилке',
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: 13.5,
                         fontWeight: FontWeight.w800,
                       ),
                     ),
@@ -171,33 +171,33 @@ class GoalSheet extends ConsumerWidget {
                   Text(
                     '${state.savings} / ${current.targetCost}',
                     style: TextStyle(
-                      fontSize: 15,
+                      fontSize: 14.5,
                       fontWeight: FontWeight.w900,
                       color: FinnyColors.primary,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 6),
+              const SizedBox(height: 5),
               ClipRRect(
                 borderRadius: BorderRadius.circular(8),
                 child: LinearProgressIndicator(
-                  minHeight: 9,
+                  minHeight: 8,
                   value: state.goal.progress,
                   color: FinnyColors.primary,
                   backgroundColor: const Color(0xFFE9E3EE),
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 8),
               if (!funded && !owned) ...[
                 const Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
                     'Сколько отложим сегодня?',
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+                    style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w800),
                   ),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: 5),
                 Row(
                   children: [
                     for (final amount in [5, 10, 25])
@@ -205,8 +205,12 @@ class GoalSheet extends ConsumerWidget {
                         child: Padding(
                           padding: const EdgeInsets.only(right: 5),
                           child: SizedBox(
-                            height: 49,
+                            height: 44,
                             child: OutlinedButton(
+                              style: OutlinedButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                                visualDensity: VisualDensity.compact,
+                              ),
                               onPressed: state.balance >= amount
                                   ? () => _depositAndCelebrate(
                                       context,
@@ -214,15 +218,25 @@ class GoalSheet extends ConsumerWidget {
                                       amount,
                                     )
                                   : null,
-                              child: Text('+$amount'),
+                              child: Text(
+                                '+$amount',
+                                style: const TextStyle(
+                                  fontSize: 14.5,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
                             ),
                           ),
                         ),
                       ),
                     Expanded(
                       child: SizedBox(
-                        height: 49,
+                        height: 44,
                         child: FilledButton(
+                          style: FilledButton.styleFrom(
+                            padding: EdgeInsets.zero,
+                            visualDensity: VisualDensity.compact,
+                          ),
                           onPressed: state.balance > 0
                               ? () => _depositAllWithFoodCheck(
                                   context,
@@ -230,7 +244,13 @@ class GoalSheet extends ConsumerWidget {
                                   state.balance,
                                 )
                               : null,
-                          child: const Text('Всё'),
+                          child: const Text(
+                            'Всё',
+                            style: TextStyle(
+                              fontSize: 14.5,
+                              fontWeight: FontWeight.w800,
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -240,7 +260,7 @@ class GoalSheet extends ConsumerWidget {
               if (funded && !owned)
                 SizedBox(
                   width: double.infinity,
-                  height: 54,
+                  height: 48,
                   child: FilledButton.icon(
                     onPressed: () => _confirmClaim(
                       context,
@@ -253,7 +273,7 @@ class GoalSheet extends ConsumerWidget {
                     label: const Text(
                       'Получить мечту',
                       style: TextStyle(
-                        fontSize: 16,
+                        fontSize: 15,
                         fontWeight: FontWeight.w900,
                       ),
                     ),
@@ -261,22 +281,22 @@ class GoalSheet extends ConsumerWidget {
                 ),
               if (owned)
                 const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 12),
+                  padding: EdgeInsets.symmetric(vertical: 8),
                   child: Text(
                     'Выбери другую мечту: накопления можно сохранить для неё.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 13,
+                      fontSize: 12,
                       color: FinnyColors.textSecondary,
                     ),
                   ),
                 ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 8),
               const Text(
                 'План сам не списывает монеты. Взнос и получение — отдельные решения.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 11.5,
                   color: FinnyColors.textSecondary,
                 ),
               ),

@@ -99,12 +99,12 @@ class WardrobeSheet extends ConsumerWidget {
                 ],
               ),
               SizedBox(
-                height: math.min(height * .35, 286.0),
+                height: math.min(height * .21, 160.0),
                 child: LayoutBuilder(
                   builder: (context, space) {
                     final size = math.min(
-                      space.maxHeight - 8,
-                      math.min(space.maxWidth, 286.0),
+                      space.maxHeight - 6,
+                      math.min(space.maxWidth, 160.0),
                     );
                     return Center(
                       child: Container(
@@ -396,7 +396,7 @@ class _OptionGroup extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Padding(
-    padding: EdgeInsets.only(bottom: compact ? 4 : 9),
+    padding: EdgeInsets.only(bottom: compact ? 3 : 6),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -404,31 +404,35 @@ class _OptionGroup extends StatelessWidget {
           title,
           style: TextStyle(
             color: _ink,
-            fontSize: compact ? 15 : 16,
+            fontSize: compact ? 13.5 : 14.5,
             fontWeight: FontWeight.w900,
           ),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 3),
         LayoutBuilder(
-          builder: (context, space) => Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: [
-              for (var i = 0; i < options.length; i++) ...[
-                SizedBox(
-                  width:
-                      (space.maxWidth - (options.length >= 4 ? 6 : 12)) /
-                      (options.length >= 4 ? 2 : 3),
-                  child: _OptionCard(
-                    option: options[i],
-                    selected: options[i].id == selected,
-                    compact: compact,
-                    onTap: () => onSelect(options[i].id),
+          builder: (context, space) {
+            final colCount = options.length == 4
+                ? 4
+                : (options.length >= 3 ? 3 : options.length);
+            final itemWidth =
+                (space.maxWidth - (colCount - 1) * 6) / colCount;
+            return Wrap(
+              spacing: 6,
+              runSpacing: 5,
+              children: [
+                for (var i = 0; i < options.length; i++)
+                  SizedBox(
+                    width: itemWidth,
+                    child: _OptionCard(
+                      option: options[i],
+                      selected: options[i].id == selected,
+                      compact: compact,
+                      onTap: () => onSelect(options[i].id),
+                    ),
                   ),
-                ),
               ],
-            ],
-          ),
+            );
+          },
         ),
       ],
     ),
@@ -453,7 +457,7 @@ class _OptionCard extends StatelessWidget {
     child: Material(
       color: selected ? FinnyColors.primaryLight : Colors.white,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(13),
         side: BorderSide(
           color: selected ? _purple : const Color(0xFFE3DDE8),
           width: selected ? 2 : 1,
@@ -461,22 +465,28 @@ class _OptionCard extends StatelessWidget {
       ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(13),
         child: SizedBox(
-          height: compact ? 55 : 62,
+          height: compact ? 42 : 46,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(option.icon, size: compact ? 15 : 20, color: option.color),
+              Icon(option.icon, size: compact ? 15 : 18, color: option.color),
               const SizedBox(height: 1),
-              Text(
-                option.label,
-                maxLines: 2,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: compact ? 11 : 12,
-                  fontWeight: selected ? FontWeight.w900 : FontWeight.w700,
-                  color: _ink,
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 2),
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    option.label,
+                    maxLines: 1,
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: compact ? 10.5 : 11.5,
+                      fontWeight: selected ? FontWeight.w900 : FontWeight.w700,
+                      color: _ink,
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -505,28 +515,28 @@ class _AccessoryButton extends StatelessWidget {
     selected: selected,
     child: Material(
       color: selected ? FinnyColors.primaryLight : const Color(0xFFF5F0E8),
-      borderRadius: BorderRadius.circular(14),
+      borderRadius: BorderRadius.circular(13),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(13),
         child: SizedBox(
-          height: 43,
+          height: 38,
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, size: 19, color: _purple),
-              const SizedBox(width: 6),
+              Icon(icon, size: 17, color: _purple),
+              const SizedBox(width: 5),
               Text(
                 label,
                 style: const TextStyle(
-                  fontSize: 13,
+                  fontSize: 12.5,
                   fontWeight: FontWeight.w800,
                   color: _ink,
                 ),
               ),
               if (selected) ...[
-                const SizedBox(width: 5),
-                Icon(Icons.check_rounded, size: 15, color: _purple),
+                const SizedBox(width: 4),
+                Icon(Icons.check_rounded, size: 14, color: _purple),
               ],
             ],
           ),
@@ -535,3 +545,4 @@ class _AccessoryButton extends StatelessWidget {
     ),
   );
 }
+
