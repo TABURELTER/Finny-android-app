@@ -1,6 +1,7 @@
 <p align="center">
-  <img src="assets/brand/finny_app_icon_512.png" alt="Иконка приложения Финни" width="125" style="border-radius: 28px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); vertical-align: middle; margin-right: 24px;" />
-  <img src="assets/finny/finny_wave_classic.svg" alt="Финни машет лапкой" width="135" style="vertical-align: middle;" />
+  <img src="assets/finny/finny_wave_classic.svg" alt="Финни машет лапкой" width="130" style="vertical-align: middle;" />
+  <img src="assets/brand/finny_app_icon_512.png" alt="Иконка приложения Финни" width="125" style="border-radius: 28px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); vertical-align: middle; margin: 0 20px;" />
+  <img src="assets/finny/finny_wave_classic.svg" alt="Финни машет лапкой" width="130" style="vertical-align: middle;" />
 </p>
 
 <h1 align="center">🦊 Питомец Финни</h1>
@@ -15,7 +16,6 @@
   <img src="https://img.shields.io/badge/Платформа-Android_8.0+-3DDC84?style=flat-square&logo=android&logoColor=white" alt="Android" />
   <img src="https://img.shields.io/badge/Стек-Flutter_3_•_Riverpod-02569B?style=flat-square&logo=flutter&logoColor=white" alt="Flutter" />
   <img src="https://img.shields.io/badge/Офлайн-100%25_No_Internet-176B4B?style=flat-square" alt="100% Офлайн" />
-  <img src="https://img.shields.io/badge/CPU_Idle-0.0%25_•_32.7°C-brightgreen?style=flat-square" alt="0% CPU" />
   <img src="https://img.shields.io/badge/RuStore-0+_Ready-005FF9?style=flat-square" alt="RuStore" />
 </p>
 
@@ -40,12 +40,12 @@
     <td align="center" width="33%">
       <img src="docs/screenshots/01-create-pet.png" width="220" alt="Создание питомца" /><br>
       <b>1. Создание питомца</b><br>
-      <sub>Окрасы, гардероб и Color Picker</sub>
+      <sub>Окрасы, гардероб, и указание имени</sub>
     </td>
     <td align="center" width="33%">
       <img src="docs/screenshots/02-home.png" width="220" alt="Главный экран" /><br>
       <b>2. 3-слойная комната</b><br>
-      <sub>Окно с погодой, живой Финни, AI-вещи</sub>
+      <sub>Окно с погодой, живой Финни, вещи</sub>
     </td>
     <td align="center" width="33%">
       <img src="docs/screenshots/03-budget-plan.png" width="220" alt="План бюджета" /><br>
@@ -61,10 +61,10 @@
 
 <img src="assets/finny/finny_apricot_happy.svg" width="150" align="right" alt="Финни в берете и куртке" style="margin-left: 15px; margin-bottom: 10px;" />
 
-Ребёнок может настроить Финни **как душе угодно** — от цвета шерстки до деталей гардероба:
+Ребёнок может настроить Финни **как только пожелает** — от цвета шерстки до деталей гардероба:
 - 🦊 **3 базовых окраса:** классический фиолетовый, солнечный абрикос и мятная лагуна.
-- 🎨 **Свободный Color Picker:** выбор любого цвета куртки через удобную встроенную палитру.
-- 🧢 **Гардероб и аксессуары:** береты, шапочки и непромокаемый дождевик в ненастную погоду.
+- 🎨 **Свободный Color Picker:** выбор любого цвета внешности через удобную встроенную палитру.
+- 🧢 **Гардероб и аксессуары:** береты, шапочки, куртки и непромокаемый дождевик в ненастную погоду.
 - 🐾 **Живые микро-анимации:** моргание, потягивание, мурлыканье и прыжки при касании.
 
 <br clear="right" />
@@ -75,9 +75,10 @@
 
 <img src="assets/finny/finny_smart_glasses.svg" width="145" align="right" alt="Умный Финни в очках" style="margin-left: 15px; margin-bottom: 10px;" />
 
+- 🛡️ **Право на безопасную ошибку:** Финни никогда не погибает. Если денег не хватило — игра объясняет причину и предлагает заработать монеты на мини-работе (*«Ценники»*, *«Заказ»*).
 - 🧠 **Умная авто-маршрутизация:** если бюджет на день ещё не закреплён, нажатие на «Лавку», «Задания» или «Мечту» открывает шторку распределения 4 конвертов (*Еда, Запас, Мечта, Радости*).
 - ⚡ **Бесшовный переход:** после утверждения плана игра сразу открывает выбранный раздел без повторных кликов.
-- 🛡️ **Право на безопасную ошибку:** Финни никогда не погибает. Если денег не хватило — игра объясняет причину и предлагает заработать монеты на мини-работе (*«Ценники»*, *«Заказ»*).
+
 
 <br clear="right" />
 
@@ -89,7 +90,7 @@
 
 - 🌤️ **Слой 1 (Окно с живой погодой):** вид за окном меняется в реальном времени (солнце, дождь, гроза, облака). При ливне Финни советует надеть дождевик!
 - 🛋️ **Слой 2 (Интерьер):** векторный уютный домик с прозрачным окном.
-- 🧸 **Слой 3 (AI-инвентарь):** купленные предметы (лежанка, лампа, мяч, робот, змей) гармонично располагаются в комнате.
+- 🧸 **Слой 3 (Инвентарь):** купленные предметы (лежанка, лампа, мяч, робот, змей) гармонично располагаются в комнате.
 
 <br clear="right" />
 
@@ -127,7 +128,6 @@
 git clone https://github.com/TABURELTER/Finny-android-app.git
 cd Finny-android-app
 flutter pub get
-flutter analyze           # 0 ошибок, 0 предупреждений
 flutter build apk --release
 ```
 Файл сборки: `build/app/outputs/flutter-apk/app-release.apk` (и копия в корне `finny-pet-release.apk`).
