@@ -21,6 +21,8 @@ final soundServiceProvider = Provider<SoundService>((ref) {
 class SoundService {
   static final SoundService instance = SoundService._();
   SoundService._() {
+    _player.positionUpdater = null;
+    _musicPlayer.positionUpdater = null;
     _init();
   }
 
@@ -30,14 +32,70 @@ class SoundService {
   bool hapticsEnabled = true;
   bool musicEnabled = true;
   double musicVolume = 0.45;
+  double get _effectiveMusicVolume => (musicVolume * 0.5).clamp(0.0, 1.0);
   bool _initialized = false;
   bool _musicPlaying = false;
 
   Future<void> _init() async {
     if (_initialized) return;
     try {
+      _player.positionUpdater = null;
+      _musicPlayer.positionUpdater = null;
+      final sfxContext = AudioContext(
+        android: const AudioContextAndroid(
+          isSpeakerphoneOn: false,
+          stayAwake: false,
+          contentType: AndroidContentType.sonification,
+          usageType: AndroidUsageType.game,
+          audioFocus: AndroidAudioFocus.none,
+        ),
+        iOS: AudioContextIOS(
+          category: AVAudioSessionCategory.ambient,
+          options: {
+            AVAudioSessionOptions.mixWithOthers,
+          },
+        ),
+      );
+      await _player.setAudioContext(sfxContext);
+
+      final musicContext = AudioContext(
+        android: const AudioContextAndroid(
+          isSpeakerphoneOn: false,
+          stayAwake: false,
+          contentType: AndroidContentType.music,
+          usageType: AndroidUsageType.game,
+          audioFocus: AndroidAudioFocus.none,
+        ),
+        iOS: AudioContextIOS(
+          category: AVAudioSessionCategory.ambient,
+          options: {
+            AVAudioSessionOptions.mixWithOthers,
+          },
+        ),
+      );
+      await _musicPlayer.setAudioContext(musicContext);
+
       await _player.setReleaseMode(ReleaseMode.stop);
       await _musicPlayer.setReleaseMode(ReleaseMode.loop);
+
+      // Auto-recover ambient music if interrupted by OS or sound focus
+      _musicPlayer.onPlayerStateChanged.listen((state) {
+        if (state == PlayerState.paused &&
+            _musicPlaying &&
+            musicEnabled &&
+            musicVolume > 0.001) {
+          _musicPlayer.resume();
+        } else if (state == PlayerState.completed &&
+            _musicPlaying &&
+            musicEnabled &&
+            musicVolume > 0.001) {
+          _musicPlayer.play(
+            AssetSource('audio/ambient_music.wav'),
+            volume: _effectiveMusicVolume,
+          );
+        }
+      });
+
       _initialized = true;
     } catch (_) {}
   }
@@ -53,7 +111,7 @@ class SoundService {
       await pauseAmbientMusic();
     } else {
       try {
-        await _musicPlayer.setVolume(musicVolume);
+        await _musicPlayer.setVolume(_effectiveMusicVolume);
         if (!_musicPlaying) {
           await startAmbientMusic();
         } else {
@@ -67,10 +125,10 @@ class SoundService {
     if (!musicEnabled || musicVolume <= 0.001) return;
     try {
       await _init();
-      await _musicPlayer.setVolume(musicVolume);
+      await _musicPlayer.setVolume(_effectiveMusicVolume);
       await _musicPlayer.play(
         AssetSource('audio/ambient_music.wav'),
-        volume: musicVolume,
+        volume: _effectiveMusicVolume,
       );
       _musicPlaying = true;
     } catch (_) {}
@@ -86,11 +144,10 @@ class SoundService {
   Future<void> resumeAmbientMusic() async {
     if (!musicEnabled || musicVolume <= 0.001) return;
     try {
-      if (!_musicPlaying) {
-        await _musicPlayer.setVolume(musicVolume);
-        await _musicPlayer.resume();
-        _musicPlaying = true;
-      }
+      await _init();
+      await _musicPlayer.setVolume(_effectiveMusicVolume);
+      await _musicPlayer.resume();
+      _musicPlaying = true;
     } catch (_) {
       await startAmbientMusic();
     }

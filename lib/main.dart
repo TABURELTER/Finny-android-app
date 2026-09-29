@@ -15,6 +15,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   GoogleFonts.config.allowRuntimeFetching = false;
 
+
   // Фиксация портретной ориентации по спецификации (Раздел 34)
   await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
 

@@ -47,11 +47,7 @@ class PetAvatarWidget extends ConsumerStatefulWidget {
 }
 
 class _PetAvatarWidgetState extends ConsumerState<PetAvatarWidget>
-    with TickerProviderStateMixin {
-  late final AnimationController _breathing = AnimationController(
-    vsync: this,
-    duration: const Duration(seconds: 2),
-  );
+    with SingleTickerProviderStateMixin {
   late final AnimationController _gesture = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 900),
@@ -60,17 +56,6 @@ class _PetAvatarWidgetState extends ConsumerState<PetAvatarWidget>
   FinnyReaction? _activeReaction;
   double _travelX = 0;
   int _tapCount = 0;
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    if (MediaQuery.disableAnimationsOf(context) ||
-        !ref.read(gameEngineProvider).settings.animationsEnabled) {
-      _breathing.stop();
-      _breathing.value = 0;
-    } else {
-      _breathing.repeat(reverse: true);
-    }
-  }
 
   @override
   void didUpdateWidget(covariant PetAvatarWidget oldWidget) {
@@ -102,7 +87,9 @@ class _PetAvatarWidgetState extends ConsumerState<PetAvatarWidget>
     });
     _gesture.forward(from: 0);
     _reaction = Timer(const Duration(milliseconds: 900), () {
-      if (mounted) setState(() => _activeReaction = null);
+      if (mounted) {
+        setState(() => _activeReaction = null);
+      }
     });
   }
 
@@ -121,7 +108,6 @@ class _PetAvatarWidgetState extends ConsumerState<PetAvatarWidget>
   @override
   void dispose() {
     _reaction?.cancel();
-    _breathing.dispose();
     _gesture.dispose();
     super.dispose();
   }
@@ -134,17 +120,6 @@ class _PetAvatarWidgetState extends ConsumerState<PetAvatarWidget>
     );
     final animations = ref.watch(
       gameEngineProvider.select((state) => state.settings.animationsEnabled),
-    );
-    ref.listen<bool>(
-      gameEngineProvider.select((state) => state.settings.animationsEnabled),
-      (_, enabled) {
-        if (enabled && !MediaQuery.disableAnimationsOf(context)) {
-          _breathing.repeat(reverse: true);
-        } else {
-          _breathing.stop();
-          _breathing.value = 0;
-        }
-      },
     );
     return Semantics(
       label: '$petName. Нажимай, чтобы увидеть разные реакции',
@@ -171,19 +146,24 @@ class _PetAvatarWidgetState extends ConsumerState<PetAvatarWidget>
               }
               final reacting = animations && _activeReaction != null;
               final waving = reacting && _activeReaction == FinnyReaction.wave;
-              final image = SvgPicture.string(
-                snapshot.data!.render(
-                  look,
-                  reacting ? FinnyMood.happy : widget.mood,
-                  wave: waving,
-                  raincoat: widget.hasRaincoat,
-                  stage: widget.stage,
+              // Wrap SVG in a dedicated RepaintBoundary so Skia / Impeller caches
+              // the raster texture instead of re-tessellating vector paths.
+              final image = RepaintBoundary(
+                child: SvgPicture.string(
+                  snapshot.data!.render(
+                    look,
+                    reacting ? FinnyMood.happy : widget.mood,
+                    wave: waving,
+                    raincoat: widget.hasRaincoat,
+                    stage: widget.stage,
+                  ),
+                  fit: BoxFit.contain,
                 ),
-                fit: BoxFit.contain,
               );
-              if (!animations) return image;
+              // Zero idle frame scheduling: return static image when not reacting
+              if (!animations || _activeReaction == null) return image;
               return AnimatedBuilder(
-                animation: Listenable.merge([_breathing, _gesture]),
+                animation: _gesture,
                 child: image,
                 builder: (context, child) {
                   final progress = _gesture.value;
@@ -201,7 +181,7 @@ class _PetAvatarWidgetState extends ConsumerState<PetAvatarWidget>
                   return Transform.translate(
                     offset: Offset(
                       _travelX * math.sin(math.pi * progress),
-                      jump - 3 * Curves.easeInOut.transform(_breathing.value),
+                      jump,
                     ),
                     child: Transform.rotate(
                       angle: angle,
