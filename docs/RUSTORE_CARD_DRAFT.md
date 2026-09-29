@@ -1,3 +1,8 @@
+<p align="center">
+  <img src="../assets/brand/finny_app_icon_512.png" alt="Иконка Финни" width="100" style="border-radius: 22px; vertical-align: middle; margin-right: 18px;" />
+  <img src="../assets/finny/finny_wave_classic.svg" alt="Финни машет" width="110" style="vertical-align: middle;" />
+</p>
+
 # Черновик карточки RuStore
 
 **Название:** Питомец Финни  
@@ -7,6 +12,8 @@
 **Краткое описание:** Помогай Финни: планируй игровые монеты, наряжай питомца, выбирай покупки и копи на мечту!
 
 **Полное описание:**
+
+<img src="../assets/finny/finny_apricot_happy.svg" width="130" align="right" alt="Финни в берете" style="margin-left: 15px; margin-bottom: 10px;" />
 
 «Питомец Финни» — добрая и увлекательная обучающая игра по финансовой грамотности для детей 7–11 лет.
 
