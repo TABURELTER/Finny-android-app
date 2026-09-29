@@ -338,9 +338,13 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     );
   }
 
-  void _openAfterPlan(VoidCallback action) {
+  Future<void> _openAfterPlan(VoidCallback action) async {
     if (ref.read(gameEngineProvider).plannedBudget?.isConfirmed != true) {
-      PlanningSheet.show(context);
+      await PlanningSheet.show(context);
+      if (mounted &&
+          ref.read(gameEngineProvider).plannedBudget?.isConfirmed == true) {
+        action();
+      }
       return;
     }
     action();
@@ -409,7 +413,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           shop: () => _openAfterPlan(() => ShopModal.show(context)),
           plan: () => PlanningSheet.show(context),
           goal: () => _openAfterPlan(() => GoalSheet.show(context)),
-          task: () => ProgressScreen.openTasks(context),
+          task: () => _openAfterPlan(() => ProgressScreen.openTasks(context)),
           finish: () => _finishDay(state),
           guide: _showGuide,
           adult: () => AdultScreen.open(context),
