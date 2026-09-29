@@ -18,6 +18,8 @@ class FinnySvg {
     jsonDecode(await rootBundle.loadString('assets/finny/palettes.json'))
         as Map<String, dynamic>,
   );
+  static final Map<String, String> _renderCache = {};
+
   String render(
     FinnyAppearance look,
     FinnyMood mood, {
@@ -25,6 +27,13 @@ class FinnySvg {
     bool raincoat = false,
     DevelopmentStage stage = DevelopmentStage.start,
   }) {
+    final cacheKey =
+        '${look.palette}_${look.hat}_${look.glasses}_${look.bow}_${look.jacket}_'
+        '${look.furColor.toARGB32()}_${look.tuftColor.toARGB32()}_${look.bellyColor.toARGB32()}_'
+        '${look.eyeColor.toARGB32()}_${look.jacketColor.toARGB32()}_${mood.name}_${wave}_${raincoat}_${stage.name}';
+    final cached = _renderCache[cacheKey];
+    if (cached != null) return cached;
+
     final doc = XmlDocument.parse(source);
     final colors = look.palette == 'custom'
         ? _customColors(look)
@@ -112,7 +121,9 @@ class FinnySvg {
           .children
           .add(XmlDocumentFragment.parse(mark));
     }
-    return doc.toXmlString();
+    final result = doc.toXmlString();
+    _renderCache[cacheKey] = result;
+    return result;
   }
 
   static String _hex(Color color) =>

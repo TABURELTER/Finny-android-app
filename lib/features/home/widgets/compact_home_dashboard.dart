@@ -9,6 +9,7 @@ import '../../../shared/widgets/pet_avatar_widget.dart';
 import '../../../shared/widgets/room_scene_svg.dart';
 import '../../../core/sound/sound_service.dart';
 import 'balance_decision_card.dart';
+import 'window_weather_view.dart';
 
 const _ink = FinnyColors.textPrimary;
 const _cream = FinnyColors.surface;
@@ -124,28 +125,115 @@ class CompactHomeDashboard extends StatelessWidget {
                             SizedBox(
                               height: roomHeight,
                               child: LayoutBuilder(
-                                builder: (context, room) => Stack(
-                                  alignment: Alignment.center,
-                                  children: [
-                                    Positioned.fill(
-                                      child: RoomSceneSvg(
-                                        forecast: state.forecast,
-                                        bed: state.inventory.hasItem(
-                                          'cozy_bed',
+                                builder: (context, room) {
+                                  final rw = room.maxWidth;
+                                  final rh = room.maxHeight;
+                                  double rx(double x) => x / 360.0 * rw;
+                                  double ry(double y) => y / 360.0 * rh;
+
+                                  final hasBed = state.inventory.hasItem('cozy_bed');
+                                  final hasLamp = state.inventory.hasItem('warm_lamp');
+                                  final hasBall = state.inventory.hasItem('toy_ball');
+                                  final hasRobot = state.inventory.hasItem('toy_robot');
+                                  final hasKite = state.inventory.hasItem('kite');
+
+                                  return Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      // ── СЛОЙ 1: Погода за окном (через прозрачное окно) ──
+                                      Positioned(
+                                        left: rx(33),
+                                        top: ry(80),
+                                        width: rx(50),
+                                        height: ry(94),
+                                        child: WindowWeatherView(
+                                          forecast: state.forecast,
+                                          motion: state.settings.animationsEnabled,
                                         ),
-                                        lamp: state.inventory.hasItem(
-                                          'warm_lamp',
-                                        ),
-                                        ball: state.inventory.hasItem(
-                                          'toy_ball',
-                                        ),
-                                        robot: state.inventory.hasItem(
-                                          'toy_robot',
-                                        ),
-                                        kite: state.inventory.hasItem('kite'),
-                                        activeItem: activeRoomItem,
                                       ),
-                                    ),
+
+                                      // ── СЛОЙ 2: Неизменный интерьер комнаты с прозрачным окном ──
+                                      const Positioned.fill(
+                                        child: RepaintBoundary(
+                                          child: RoomSceneSvg(),
+                                        ),
+                                      ),
+
+                                      // ── СЛОЙ 3: Купленные AI-предметы ──
+                                      if (hasBed)
+                                        Positioned(
+                                          left: rx(10),
+                                          top: ry(260),
+                                          width: rx(80),
+                                          height: ry(62),
+                                          child: GestureDetector(
+                                            onTap: onRoomItem != null ? () => onRoomItem!('cozy_bed') : null,
+                                            child: Image.asset(
+                                              'assets/finny/items/cozy_bed.png',
+                                              fit: BoxFit.contain,
+                                            ),
+                                          ),
+                                        ),
+
+                                      if (hasLamp)
+                                        Positioned(
+                                          left: rx(248),
+                                          top: ry(184),
+                                          width: rx(52),
+                                          height: ry(104),
+                                          child: GestureDetector(
+                                            onTap: onRoomItem != null ? () => onRoomItem!('warm_lamp') : null,
+                                            child: Image.asset(
+                                              'assets/finny/items/warm_lamp.png',
+                                              fit: BoxFit.contain,
+                                            ),
+                                          ),
+                                        ),
+
+                                      if (hasBall)
+                                        Positioned(
+                                          left: rx(78),
+                                          top: ry(280),
+                                          width: rx(30),
+                                          height: ry(30),
+                                          child: GestureDetector(
+                                            onTap: onRoomItem != null ? () => onRoomItem!('toy_ball') : null,
+                                            child: Image.asset(
+                                              'assets/finny/items/toy_ball.png',
+                                              fit: BoxFit.contain,
+                                            ),
+                                          ),
+                                        ),
+
+                                      if (hasRobot)
+                                        Positioned(
+                                          left: rx(218),
+                                          top: ry(260),
+                                          width: rx(34),
+                                          height: ry(42),
+                                          child: GestureDetector(
+                                            onTap: onRoomItem != null ? () => onRoomItem!('toy_robot') : null,
+                                            child: Image.asset(
+                                              'assets/finny/items/toy_robot.png',
+                                              fit: BoxFit.contain,
+                                            ),
+                                          ),
+                                        ),
+
+                                      if (hasKite)
+                                        Positioned(
+                                          left: rx(276),
+                                          top: ry(42),
+                                          width: rx(52),
+                                          height: ry(54),
+                                          child: GestureDetector(
+                                            onTap: onRoomItem != null ? () => onRoomItem!('kite') : null,
+                                            child: Image.asset(
+                                              'assets/finny/items/kite.png',
+                                              fit: BoxFit.contain,
+                                            ),
+                                          ),
+                                        ),
                                     Positioned(
                                       top: 9,
                                       left: 10,
@@ -154,28 +242,30 @@ class CompactHomeDashboard extends StatelessWidget {
                                     ),
                                     Positioned(
                                       bottom: 3,
-                                      child: PetAvatarWidget(
-                                        mood: state.finny.mood,
-                                        stage: state.finny.stage,
-                                        size: (room.maxHeight * .68).clamp(
-                                          82.0,
-                                          room.maxWidth - 70,
+                                      child: RepaintBoundary(
+                                        child: PetAvatarWidget(
+                                          mood: state.finny.mood,
+                                          stage: state.finny.stage,
+                                          size: (room.maxHeight * .68).clamp(
+                                            82.0,
+                                            room.maxWidth - 70,
+                                          ),
+                                          hasRaincoat:
+                                              state.inventory.hasItem('raincoat') &&
+                                                  (state.finny.activeOutfit ==
+                                                          'raincoat' ||
+                                                      state.forecast.title
+                                                          .toLowerCase()
+                                                          .contains('ливень') ||
+                                                      state.forecast.title
+                                                          .toLowerCase()
+                                                          .contains('дождь')),
+                                          onTap: pet,
+                                          onReact: onPetReact,
+                                          requestedReaction: requestedReaction,
+                                          reactionTravel: reactionTravel,
+                                          reactionToken: reactionToken,
                                         ),
-                                        hasRaincoat:
-                                            state.inventory.hasItem('raincoat') &&
-                                                (state.finny.activeOutfit ==
-                                                        'raincoat' ||
-                                                    state.forecast.title
-                                                        .toLowerCase()
-                                                        .contains('ливень') ||
-                                                    state.forecast.title
-                                                        .toLowerCase()
-                                                        .contains('дождь')),
-                                        onTap: pet,
-                                        onReact: onPetReact,
-                                        requestedReaction: requestedReaction,
-                                        reactionTravel: reactionTravel,
-                                        reactionToken: reactionToken,
                                       ),
                                     ),
                                     if (onRoomItem != null &&
@@ -219,7 +309,7 @@ class CompactHomeDashboard extends StatelessWidget {
                                       _RoomHotspot(
                                         room: room,
                                         x: 295,
-                                        y: 95,
+                                        y: 65,
                                         label: 'Посмотреть на воздушного змея',
                                         onTap: () => onRoomItem!('kite'),
                                       ),
@@ -245,10 +335,11 @@ class CompactHomeDashboard extends StatelessWidget {
                                       child: _WeatherChip(state.forecast.title),
                                     ),
                                   ],
-                                ),
-                              ),
+                                );
+                              },
                             ),
-                            BalanceStatsStrip(stats: state.balanceStats),
+                          ),
+                          BalanceStatsStrip(stats: state.balanceStats),
                             Divider(
                               height: 1,
                               thickness: 1,

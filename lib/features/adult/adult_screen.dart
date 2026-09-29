@@ -304,17 +304,89 @@ class _AdultScreenState extends ConsumerState<AdultScreen> {
                   ),
                   Material(
                     color: Colors.transparent,
-                    child: SwitchListTile(
-                      title: Text(
-                        'Анимация Финни',
-                        style: TextStyle(fontFamily: 'Nunito', fontSize: 14),
-                      ),
-                      value: state.settings.animationsEnabled,
-                      activeTrackColor: FinnyColors.primary,
-                      contentPadding: EdgeInsets.zero,
-                      onChanged: ref
-                          .read(gameEngineProvider.notifier)
-                          .setAvatarAnimations,
+                    child: Column(
+                      children: [
+                        SwitchListTile(
+                          title: Text(
+                            'Фоновая музыка',
+                            style: TextStyle(fontFamily: 'Nunito', fontSize: 14),
+                          ),
+                          subtitle: Text(
+                            'Приятная мелодия для уюта',
+                            style: TextStyle(fontFamily: 'Nunito', fontSize: 12, color: FinnyColors.textSecondary),
+                          ),
+                          value: state.settings.musicEnabled,
+                          activeTrackColor: FinnyColors.primary,
+                          contentPadding: EdgeInsets.zero,
+                          onChanged: ref
+                              .read(gameEngineProvider.notifier)
+                              .setMusicEnabled,
+                        ),
+                        if (state.settings.musicEnabled) ...[
+                          Padding(
+                            padding: const EdgeInsets.only(top: 4, bottom: 8),
+                            child: Row(
+                              children: [
+                                Icon(Icons.volume_down_rounded, size: 20, color: FinnyColors.textSecondary),
+                                Expanded(
+                                  child: Slider(
+                                    value: state.settings.musicVolume,
+                                    activeColor: FinnyColors.primary,
+                                    onChanged: (val) {
+                                      ref
+                                          .read(gameEngineProvider.notifier)
+                                          .setMusicVolume(val);
+                                    },
+                                  ),
+                                ),
+                                Icon(Icons.volume_up_rounded, size: 20, color: FinnyColors.textSecondary),
+                                const Gap(6),
+                                Text(
+                                  '${(state.settings.musicVolume * 100).round()}%',
+                                  style: TextStyle(
+                                    fontFamily: 'Nunito',
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                    color: FinnyColors.textPrimary,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                        SwitchListTile(
+                          title: Text(
+                            'Звуковые эффекты',
+                            style: TextStyle(fontFamily: 'Nunito', fontSize: 14),
+                          ),
+                          subtitle: Text(
+                            'Звуки монет, кнопок и радости',
+                            style: TextStyle(fontFamily: 'Nunito', fontSize: 12, color: FinnyColors.textSecondary),
+                          ),
+                          value: state.settings.soundEnabled,
+                          activeTrackColor: FinnyColors.primary,
+                          contentPadding: EdgeInsets.zero,
+                          onChanged: ref
+                              .read(gameEngineProvider.notifier)
+                              .setSoundEffectsEnabled,
+                        ),
+                        SwitchListTile(
+                          title: Text(
+                            'Анимация Финни',
+                            style: TextStyle(fontFamily: 'Nunito', fontSize: 14),
+                          ),
+                          subtitle: Text(
+                            'Дыхание и движения питомца',
+                            style: TextStyle(fontFamily: 'Nunito', fontSize: 12, color: FinnyColors.textSecondary),
+                          ),
+                          value: state.settings.animationsEnabled,
+                          activeTrackColor: FinnyColors.primary,
+                          contentPadding: EdgeInsets.zero,
+                          onChanged: ref
+                              .read(gameEngineProvider.notifier)
+                              .setAvatarAnimations,
+                        ),
+                      ],
                     ),
                   ),
                 ],

@@ -57,3 +57,5 @@ diag_error_*
 
 /docs/*.md
 /docs/screenshots
+scratch/*.py
+assets/exploration/*

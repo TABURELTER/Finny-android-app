@@ -11,6 +11,10 @@ final soundServiceProvider = Provider<SoundService>((ref) {
   );
   service.soundEnabled = settings.soundEnabled;
   service.hapticsEnabled = settings.hapticsEnabled;
+  service.syncMusicSettings(
+    enabled: settings.musicEnabled,
+    volume: settings.musicVolume,
+  );
   return service;
 });
 
@@ -21,15 +25,81 @@ class SoundService {
   }
 
   final AudioPlayer _player = AudioPlayer();
+  final AudioPlayer _musicPlayer = AudioPlayer();
   bool soundEnabled = true;
   bool hapticsEnabled = true;
+  bool musicEnabled = true;
+  double musicVolume = 0.45;
   bool _initialized = false;
+  bool _musicPlaying = false;
 
   Future<void> _init() async {
     if (_initialized) return;
     try {
       await _player.setReleaseMode(ReleaseMode.stop);
+      await _musicPlayer.setReleaseMode(ReleaseMode.loop);
       _initialized = true;
+    } catch (_) {}
+  }
+
+  Future<void> syncMusicSettings({
+    required bool enabled,
+    required double volume,
+  }) async {
+    musicEnabled = enabled;
+    musicVolume = volume.clamp(0.0, 1.0);
+
+    if (!musicEnabled || musicVolume <= 0.001) {
+      await pauseAmbientMusic();
+    } else {
+      try {
+        await _musicPlayer.setVolume(musicVolume);
+        if (!_musicPlaying) {
+          await startAmbientMusic();
+        } else {
+          await resumeAmbientMusic();
+        }
+      } catch (_) {}
+    }
+  }
+
+  Future<void> startAmbientMusic() async {
+    if (!musicEnabled || musicVolume <= 0.001) return;
+    try {
+      await _init();
+      await _musicPlayer.setVolume(musicVolume);
+      await _musicPlayer.play(
+        AssetSource('audio/ambient_music.wav'),
+        volume: musicVolume,
+      );
+      _musicPlaying = true;
+    } catch (_) {}
+  }
+
+  Future<void> pauseAmbientMusic() async {
+    try {
+      await _musicPlayer.pause();
+      _musicPlaying = false;
+    } catch (_) {}
+  }
+
+  Future<void> resumeAmbientMusic() async {
+    if (!musicEnabled || musicVolume <= 0.001) return;
+    try {
+      if (!_musicPlaying) {
+        await _musicPlayer.setVolume(musicVolume);
+        await _musicPlayer.resume();
+        _musicPlaying = true;
+      }
+    } catch (_) {
+      await startAmbientMusic();
+    }
+  }
+
+  Future<void> stopAmbientMusic() async {
+    try {
+      await _musicPlayer.stop();
+      _musicPlaying = false;
     } catch (_) {}
   }
 
@@ -90,5 +160,6 @@ class SoundService {
 
   void dispose() {
     _player.dispose();
+    _musicPlayer.dispose();
   }
 }

@@ -862,6 +862,27 @@ class GameEngine extends StateNotifier<GameState> {
     _save();
   }
 
+  void setMusicEnabled(bool enabled) {
+    state = state.copyWith(
+      settings: state.settings.copyWith(musicEnabled: enabled),
+    );
+    _save();
+  }
+
+  void setMusicVolume(double volume) {
+    state = state.copyWith(
+      settings: state.settings.copyWith(musicVolume: volume.clamp(0.0, 1.0)),
+    );
+    _save();
+  }
+
+  void setSoundEffectsEnabled(bool enabled) {
+    state = state.copyWith(
+      settings: state.settings.copyWith(soundEnabled: enabled),
+    );
+    _save();
+  }
+
   bool completeOnboarding(String petName, String goalId) {
     final name = petName.trim();
     if (name.isEmpty ||

@@ -461,57 +461,97 @@ class BalanceDecisionCard extends ConsumerWidget {
           children: [
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(13),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
               decoration: BoxDecoration(
-                color: FinnyColors.primaryLight.withValues(alpha: .58),
-                borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: FinnyColors.borderLight),
+                gradient: const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFFFFF9F3), Color(0xFFFFF1E4)],
+                ),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: const Color(0xFFF0E2D4), width: 1.2),
+                boxShadow: [
+                  BoxShadow(
+                    color: const Color(0xFF42281D).withValues(alpha: 0.03),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Container(
-                    width: 43,
-                    height: 43,
+                    width: 44,
+                    height: 44,
                     alignment: Alignment.center,
-                    decoration: const BoxDecoration(
-                      color: FinnyColors.surface,
-                      shape: BoxShape.circle,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(color: const Color(0xFFF0E0D0)),
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF42281D).withValues(alpha: 0.05),
+                          blurRadius: 4,
+                          offset: const Offset(0, 1.5),
+                        ),
+                      ],
                     ),
-                    child: Text(icon, style: const TextStyle(fontSize: 25)),
+                    child: Text(icon, style: const TextStyle(fontSize: 24)),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          title,
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w900,
-                            color: FinnyColors.textPrimary,
-                          ),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                title,
+                                style: const TextStyle(
+                                  fontFamily: 'Nunito',
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w900,
+                                  color: FinnyColors.textPrimary,
+                                ),
+                              ),
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2.5,
+                              ),
+                              decoration: BoxDecoration(
+                                color: FinnyColors.primary.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                  color: FinnyColors.primary.withValues(alpha: 0.25),
+                                ),
+                              ),
+                              child: Text(
+                                '${state.balanceStats.cardsToday}/4',
+                                style: TextStyle(
+                                  fontFamily: 'Nunito',
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w900,
+                                  color: FinnyColors.primary,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 3),
                         Text(
                           prompt,
                           style: const TextStyle(
-                            fontSize: 13,
-                            height: 1.22,
+                            fontFamily: 'Nunito',
+                            fontSize: 12.5,
+                            height: 1.25,
                             color: FinnyColors.textSecondary,
                           ),
                         ),
                       ],
-                    ),
-                  ),
-                  const SizedBox(width: 5),
-                  Text(
-                    '${state.balanceStats.cardsToday}/4',
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w900,
-                      color: FinnyColors.primaryDark,
                     ),
                   ),
                 ],
@@ -569,36 +609,69 @@ class _DecisionButton extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) => Material(
-    color: enabled ? FinnyColors.surface : FinnyColors.surfaceMuted,
-    borderRadius: BorderRadius.circular(13),
-    child: InkWell(
-      onTap: enabled ? onTap : null,
-      borderRadius: BorderRadius.circular(13),
-      child: Container(
-        width: double.infinity,
-        constraints: const BoxConstraints(minHeight: 69),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(13),
-          border: Border.all(color: FinnyColors.borderLight),
-        ),
+  Widget build(BuildContext context) => Container(
+    decoration: BoxDecoration(
+      color: enabled ? Colors.white : const Color(0xFFF7F4EF),
+      borderRadius: BorderRadius.circular(16),
+      border: Border.all(
+        color: enabled ? const Color(0xFFE8DFD5) : const Color(0xFFEBE4DC),
+        width: 1.2,
+      ),
+      boxShadow: enabled
+          ? [
+              BoxShadow(
+                color: const Color(0xFF2C221E).withValues(alpha: 0.04),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ]
+          : null,
+    ),
+    child: Material(
+      color: Colors.transparent,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: enabled ? onTap : null,
+        borderRadius: BorderRadius.circular(16),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
           child: Row(
             children: [
-              CircleAvatar(
-                radius: 16,
-                backgroundColor: FinnyColors.primaryLight,
+              Container(
+                width: 32,
+                height: 32,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  gradient: enabled
+                      ? const LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [Color(0xFFFF8E3C), Color(0xFFC94C19)],
+                        )
+                      : null,
+                  color: enabled ? null : const Color(0xFFDCD5CC),
+                  borderRadius: BorderRadius.circular(10),
+                  boxShadow: enabled
+                      ? [
+                          BoxShadow(
+                            color: const Color(0xFFC94C19).withValues(alpha: 0.25),
+                            blurRadius: 4,
+                            offset: const Offset(0, 1.5),
+                          ),
+                        ]
+                      : null,
+                ),
                 child: Text(
                   '$number',
-                  style: TextStyle(
-                    color: FinnyColors.primaryDark,
+                  style: const TextStyle(
+                    fontFamily: 'Nunito',
+                    color: Colors.white,
                     fontSize: 14,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
               ),
-              const SizedBox(width: 11),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -606,37 +679,49 @@ class _DecisionButton extends StatelessWidget {
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(
+                      style: TextStyle(
+                        fontFamily: 'Nunito',
                         fontSize: 15,
                         fontWeight: FontWeight.w900,
+                        color: enabled
+                            ? FinnyColors.textPrimary
+                            : FinnyColors.textTertiary,
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Wrap(spacing: 5, runSpacing: 4, children: effects),
+                    const SizedBox(height: 5),
+                    Wrap(spacing: 6, runSpacing: 4, children: effects),
                     if (note != null) ...[
-                      const SizedBox(height: 3),
+                      const SizedBox(height: 4),
                       Text(
                         note!,
-                        style: const TextStyle(
+                        style: TextStyle(
+                          fontFamily: 'Nunito',
                           fontSize: 11,
-                          height: 1.12,
-                          color: FinnyColors.textSecondary,
+                          fontWeight: FontWeight.w600,
+                          height: 1.15,
+                          color: enabled
+                              ? FinnyColors.textSecondary
+                              : FinnyColors.textTertiary,
                         ),
                       ),
                     ],
                   ],
                 ),
               ),
-              const SizedBox(width: 5),
-              CircleAvatar(
-                radius: 15,
-                backgroundColor: enabled
-                    ? FinnyColors.primary
-                    : FinnyColors.border,
-                child: const Icon(
-                  Icons.chevron_right_rounded,
-                  size: 21,
-                  color: Colors.white,
+              const SizedBox(width: 8),
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: enabled
+                      ? FinnyColors.primary.withValues(alpha: 0.12)
+                      : const Color(0xFFE8E2D9),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.arrow_forward_rounded,
+                  size: 16,
+                  color: enabled ? FinnyColors.primary : const Color(0xFFAAA095),
                 ),
               ),
             ],
@@ -654,14 +739,20 @@ class _EffectBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
     decoration: BoxDecoration(
-      color: color.withValues(alpha: .12),
-      borderRadius: BorderRadius.circular(7),
+      color: color.withValues(alpha: .10),
+      borderRadius: BorderRadius.circular(8),
+      border: Border.all(color: color.withValues(alpha: .28), width: 1),
     ),
     child: Text(
       label,
-      style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.w900),
+      style: TextStyle(
+        fontFamily: 'Nunito',
+        color: color,
+        fontSize: 12,
+        fontWeight: FontWeight.w900,
+      ),
     ),
   );
 }

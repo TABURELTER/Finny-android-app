@@ -189,22 +189,30 @@ class GameSettings {
   final bool soundEnabled;
   final bool animationsEnabled;
   final bool hapticsEnabled;
+  final bool musicEnabled;
+  final double musicVolume;
 
   const GameSettings({
     this.soundEnabled = true,
     this.animationsEnabled = true,
     this.hapticsEnabled = true,
+    this.musicEnabled = true,
+    this.musicVolume = 0.45,
   });
 
   GameSettings copyWith({
     bool? soundEnabled,
     bool? animationsEnabled,
     bool? hapticsEnabled,
+    bool? musicEnabled,
+    double? musicVolume,
   }) {
     return GameSettings(
       soundEnabled: soundEnabled ?? this.soundEnabled,
       animationsEnabled: animationsEnabled ?? this.animationsEnabled,
       hapticsEnabled: hapticsEnabled ?? this.hapticsEnabled,
+      musicEnabled: musicEnabled ?? this.musicEnabled,
+      musicVolume: musicVolume ?? this.musicVolume,
     );
   }
 
@@ -212,12 +220,16 @@ class GameSettings {
     'soundEnabled': soundEnabled,
     'animationsEnabled': animationsEnabled,
     'hapticsEnabled': hapticsEnabled,
+    'musicEnabled': musicEnabled,
+    'musicVolume': musicVolume,
   };
 
   factory GameSettings.fromJson(Map<String, dynamic> json) => GameSettings(
     soundEnabled: json['soundEnabled'] as bool? ?? true,
     animationsEnabled: json['animationsEnabled'] as bool? ?? true,
     hapticsEnabled: json['hapticsEnabled'] as bool? ?? true,
+    musicEnabled: json['musicEnabled'] as bool? ?? true,
+    musicVolume: (json['musicVolume'] as num?)?.toDouble() ?? 0.45,
   );
 }
 

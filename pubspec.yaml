@@ -66,6 +66,7 @@ flutter:
   assets:
     - fonts/
     - assets/finny/
+    - assets/finny/items/
     - assets/audio/
     - assets/brand/
 

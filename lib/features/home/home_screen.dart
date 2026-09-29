@@ -115,6 +115,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   @override
   void dispose() {
+    _lifecycleListener.dispose();
     _speechTimer?.cancel();
     super.dispose();
   }
@@ -346,11 +347,19 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     action();
   }
 
+  late final AppLifecycleListener _lifecycleListener;
+
   @override
   void initState() {
     super.initState();
+    _lifecycleListener = AppLifecycleListener(
+      onPause: () => SoundService.instance.pauseAmbientMusic(),
+      onResume: () => SoundService.instance.resumeAmbientMusic(),
+    );
     // Проверяем фазу при первом открытии
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      ref.read(soundServiceProvider);
       _checkPhaseTriggers(ref.read(gameEngineProvider));
     });
   }
